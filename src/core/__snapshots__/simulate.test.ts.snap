@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`узор 5 — плед, три склейки > продольный рез уносит пропил: полосы съезжают относительно ламелей 1`] = `
+"ooom
+oomm
+mooo
+moom
+ooom
+oomm
+mooo
+moom"
+`;

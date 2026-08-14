@@ -1,0 +1,66 @@
+/*
+ * День 1: голый минимум, чтобы ссылка открывалась и на неё было не стыдно
+ * смотреть. Дизайн-система выбирается на дне 2 (design-system-selection),
+ * тогда эти значения уедут в токены и этот файл станет их объявлением.
+ */
+
+:root {
+  --bg: #1c1917;
+  --surface: #292524;
+  --ink: #e7e5e4;
+  --ink-dim: #a8a29e;
+  --line: #44403c;
+
+  --step-1: 0.875rem;
+  --step-0: 1rem;
+  --step-2: 1.5rem;
+
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: var(--step-0) / 1.5 ui-sans-serif, system-ui, sans-serif;
+}
+
+.shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-4);
+}
+
+.board {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--space-2);
+  padding: var(--space-4);
+}
+
+.board svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.note {
+  color: var(--ink-dim);
+  font-size: var(--step-1);
+  margin-top: var(--space-6);
+}
+
+h1 {
+  font-size: var(--step-2);
+  margin: 0 0 var(--space-3);
+}
