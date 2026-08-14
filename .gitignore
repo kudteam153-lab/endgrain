@@ -1,0 +1,30 @@
+# Машинно-специфичное — путь к ai-memory, локальные оверрайды.
+# Файл сам себя помечает «НЕ коммитить как шаблон».
+.claude/settings.local.json
+
+# Служебные маркеры кадэнса гейтов (состояние машины, не шаблон).
+.claude/.security-gate-seen
+.claude/.*-seen
+
+# Python-мусор от evals/scripts.
+__pycache__/
+*.pyc
+
+# Локальные оверрайды команд гейтов, если заводятся под конкретную машину.
+.claude/*.local.txt
+
+# --- Node / Vite -------------------------------------------------------------
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.local
+.vite/
+
+# Логи пакетного менеджера.
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# macOS
+.DS_Store

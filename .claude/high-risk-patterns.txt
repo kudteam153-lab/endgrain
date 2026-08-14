@@ -1,0 +1,53 @@
+# =============================================================================
+# high-risk-patterns.txt — механизируемая часть high-risk-actions.txt.
+#
+# Категории в high-risk-actions.txt («deploy:prod», «migration:irreversible»)
+# — семантические: понять, что действие под них подпадает, может только агент.
+# Здесь — то подмножество, которое опознаётся по самой команде или пути, и
+# потому может проверяться хуком guard-highrisk.sh, а не доверием к дисциплине.
+#
+# Решение хука — «ask», не «deny»: действия обратимые, но дорогие, где нужно
+# решение человека. С Claude Code 2.1.211 hook-«ask» нельзя повысить до
+# «allow» никаким правилом разрешений — это и делает эскалацию механизмом.
+#
+# Формат: <категория> :: <bash|path> :: <паттерн> [:: <паттерн-исключение>]
+# Разделитель — «::», а не «|»: вертикальная черта живёт внутри самих
+# регулярных выражений, и правило рвалось пополам на своей же альтернации.
+#   bash — расширенное регулярное выражение по тексту команды (без учёта регистра)
+#   path — glob по пути файла для Edit/Write/MultiEdit
+#   четвёртое поле необязательное: совпало с ним — правило не срабатывает.
+#   Нужно потому, что ERE не умеет отрицательный просмотр вперёд: правило на
+#   «UPDATE … SET … ;» без него эскалирует и обычный UPDATE с WHERE.
+#
+# Остальные категории high-risk-actions.txt механически не опознаются и
+# остаются поведенческим инвариантом. Список здесь НЕ делает файл категорий
+# лишним и не покрывает его целиком — не путать одно с другим.
+# =============================================================================
+
+# --- обход контроля ----------------------------------------------------------
+control:bypass-guards :: bash :: --no-verify
+control:bypass-guards :: bash :: --dangerously-skip-permissions
+control:bypass-guards :: bash :: disableAllHooks
+control:disable-tests :: bash :: (pytest|jest|vitest)[[:space:]].*--(no-tests|passWithNoTests)
+
+# --- миграции ----------------------------------------------------------------
+migration:irreversible :: bash :: alembic[[:space:]]+downgrade
+migration:irreversible :: bash :: (DROP|ALTER)[[:space:]]+TABLE[[:space:]]+[a-zA-Z_."]+[[:space:]]+DROP[[:space:]]+COLUMN
+
+# --- массовая правка данных --------------------------------------------------
+# DELETE без WHERE блокирует guard-bash. UPDATE без WHERE обратим бэкапом,
+# но цена высокая — эскалация.
+data:bulk-update :: bash :: UPDATE[[:space:]]+[a-zA-Z_."]+[[:space:]]+SET[[:space:]]+[^;]*; :: WHERE
+
+# --- деплой и инфраструктура -------------------------------------------------
+deploy:prod :: bash :: kubectl[[:space:]].*(apply|delete|rollout)
+deploy:prod :: bash :: docker[[:space:]]+compose[[:space:]].*-f[[:space:]]*[^[:space:]]*prod
+infra:ci-cd-change :: path :: .github/workflows/*
+infra:prod-config :: path :: docker-compose*.yml
+infra:prod-config :: path :: Dockerfile*
+infra:prod-config :: path :: nginx.conf
+
+# --- секреты -----------------------------------------------------------------
+# .env.production и .env.prod закрыты жёстче — они в protected-paths.txt.
+secrets:prod-env :: path :: .env
+secrets:prod-env :: path :: .env.local

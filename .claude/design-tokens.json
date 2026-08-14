@@ -1,0 +1,29 @@
+{
+  "_comment": "Конфиг для check_design_tokens.py и хука design-check.sh. Дизайн-система проекта выбирается на дне 2 (design-system-selection) — до этого allowed_hex минимальный, то есть любой цвет в UI-файле ловится. Так и задумано: палитра появляется в token_files, а не расползается по компонентам. Породы дерева (Species.color) — данные предметной области, их место в src/core/species.ts, он объявлен token-файлом.",
+
+  "allowed_hex": [
+    "#000000", "#000", "#ffffff", "#fff", "transparent", "currentColor", "none"
+  ],
+
+  "token_files": [
+    "**/tokens.css",
+    "**/theme.ts",
+    "**/src/index.css",
+    "**/src/core/species.ts"
+  ],
+
+  "ignore_globs": [
+    "**/build/**",
+    "**/dist/**",
+    "**/node_modules/**",
+    "**/coverage/**",
+    "**/src/core/**",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ],
+
+  "_comment_ignore": "src/core/** исключён намеренно: ядро — не UI. simulate/cut/glue оперируют миллиметрами заготовки (3.2 мм пропил, 19 мм ламель, 45° рез), и check_magic_px ловил бы предметную область как нарушение дизайн-системы. Хук, срабатывающий на каждую правку геометрии, перестают читать. Токены правят вёрстку, не столярку.",
+
+  "check_magic_px": true,
+  "allowed_px": [0, 1, 2, 4, 8, 12, 16, 24, 32, 48, 64]
+}

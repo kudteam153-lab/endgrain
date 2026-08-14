@@ -1,0 +1,19 @@
+# Форс LF во всём дереве — иначе git на Windows конвертит .sh-хуки в CRLF,
+# и bash/git-bash падает («bad interpreter: /usr/bin/env bash^M»).
+# Кросс-платформенно безопасно. Скопировать в корень каждого репо.
+* text=auto eol=lf
+
+# Шелл и python — строго LF (исполняются хуками)
+*.sh   text eol=lf
+*.py   text eol=lf
+
+# Бинарники — не трогать
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+*.woff  binary
+*.woff2 binary
