@@ -1,5 +1,8 @@
-/* Панель параметров. Плотность инструмента: воздуха ровно столько, чтобы
-   группы читались, и ни шага больше (#D-11). */
+/*
+ * Ручки. Плотность инструмента: группы делятся волосяной линией, а не
+ * карточками; кнопки ghost; радиуса нет (#D-12). Иерархия держится на
+ * шрифте и разрядке, а не на цвете и заливках.
+ */
 
 .controls {
   display: flex;
@@ -12,7 +15,7 @@
   flex-direction: column;
   gap: var(--s-3);
   padding-bottom: var(--s-5);
-  border-bottom: var(--hairline) solid var(--line);
+  border-bottom: var(--hairline) solid var(--rule);
 }
 
 .controls__group:last-child {
@@ -29,16 +32,17 @@
 }
 
 .controls__note {
+  font-family: var(--font-mono);
   font-size: var(--text-2xs);
   color: var(--ink-2);
-  padding-left: var(--s-1);
 }
 
-/* --- Узор ------------------------------------------------------------------ */
+/* --- Узор ------------------------------------------------------------------- */
 
 .controls__patterns {
-  display: grid;
-  gap: var(--s-1);
+  display: flex;
+  flex-direction: column;
+  border: var(--hairline) solid var(--rule);
 }
 
 .controls__pattern {
@@ -50,21 +54,27 @@
   text-align: left;
   background: transparent;
   color: var(--ink);
-  border: var(--hairline) solid var(--line);
+  border: 0;
+  border-bottom: var(--hairline) solid var(--rule);
+  border-left: var(--rule-accent) solid transparent;
   border-radius: var(--radius);
   cursor: pointer;
   transition:
-    border-color var(--dur-1) var(--ease),
-    background-color var(--dur-1) var(--ease);
+    background-color var(--dur-1) var(--ease),
+    border-color var(--dur-1) var(--ease);
+}
+
+.controls__pattern:last-child {
+  border-bottom: 0;
 }
 
 .controls__pattern:hover {
-  border-color: var(--ink-3);
+  background: var(--sheet-sunken);
 }
 
 .controls__pattern[aria-checked="true"] {
-  border-color: var(--accent);
   background: var(--accent-soft);
+  border-left-color: var(--accent);
 }
 
 .controls__pattern-name {
@@ -73,6 +83,7 @@
 }
 
 .controls__pattern-hint {
+  font-family: var(--font-mono);
   font-size: var(--text-2xs);
   color: var(--ink-2);
 }
@@ -85,17 +96,23 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--s-1);
 }
 
 .controls__lamella {
   display: grid;
-  grid-template-columns: 1.75rem 1fr 5rem 1.75rem;
+  grid-template-columns: 1.5rem 1fr 4.5rem 1.5rem;
   align-items: center;
   gap: var(--s-2);
+  padding: var(--s-1) 0;
+  border-bottom: var(--hairline) solid var(--rule);
+}
+
+.controls__lamella:last-child {
+  border-bottom: 0;
 }
 
 .controls__lamella-no {
+  font-family: var(--font-mono);
   font-size: var(--text-2xs);
   color: var(--ink-2);
   text-align: right;
@@ -103,14 +120,15 @@
 
 .controls__select,
 .controls__num {
-  font-family: inherit;
   font-size: var(--text-sm);
   color: var(--ink);
-  background: var(--surface);
-  border: var(--hairline) solid var(--line);
+  background: transparent;
+  border: 0;
+  border-bottom: var(--hairline) solid transparent;
   border-radius: var(--radius);
-  padding: var(--s-1) var(--s-2);
+  padding: var(--s-1) 0;
   min-width: 0;
+  transition: border-color var(--dur-1) var(--ease);
 }
 
 .controls__num {
@@ -121,31 +139,35 @@
 }
 
 .controls__select:hover,
-.controls__num:hover {
-  border-color: var(--ink-3);
+.controls__num:hover,
+.controls__select:focus,
+.controls__num:focus {
+  border-bottom-color: var(--accent);
 }
 
 .controls__icon-btn {
   display: grid;
   place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  font-size: var(--text-md);
+  width: 1.5rem;
+  height: 1.5rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
   line-height: 1;
   color: var(--ink-2);
   background: transparent;
-  border: var(--hairline) solid var(--line);
+  border: var(--hairline) solid var(--rule);
   border-radius: var(--radius);
   cursor: pointer;
 }
 
 .controls__icon-btn:hover:not(:disabled) {
-  color: var(--alarm);
+  color: var(--sheet);
+  background: var(--alarm);
   border-color: var(--alarm);
 }
 
 .controls__icon-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
@@ -155,6 +177,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  padding-bottom: var(--s-2);
 }
 
 .controls__row {
@@ -172,10 +195,12 @@
   display: flex;
   align-items: baseline;
   gap: var(--s-2);
-  width: 8rem;
+  width: 7rem;
+  border-bottom: var(--hairline) solid var(--rule);
 }
 
 .controls__unit {
+  font-family: var(--font-mono);
   font-size: var(--text-2xs);
   color: var(--ink-2);
 }
@@ -184,20 +209,17 @@
 
 .controls__segmented {
   display: flex;
-  gap: 0;
-  border: var(--hairline) solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
+  border: var(--hairline) solid var(--rule);
 }
 
 .controls__seg {
   padding: var(--s-1) var(--s-3);
-  font-family: inherit;
-  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
   color: var(--ink-2);
-  background: var(--surface);
+  background: transparent;
   border: 0;
-  border-right: var(--hairline) solid var(--line);
+  border-right: var(--hairline) solid var(--rule);
   cursor: pointer;
 }
 
@@ -215,21 +237,32 @@
 .controls__btn {
   align-self: start;
   padding: var(--s-2) var(--s-4);
-  font-family: inherit;
-  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
   color: var(--ink);
-  background: var(--surface);
-  border: var(--hairline) solid var(--ink-3);
+  background: transparent;
+  border: var(--hairline) solid var(--ink);
   border-radius: var(--radius);
   cursor: pointer;
-  transition: border-color var(--dur-1) var(--ease);
+  transition:
+    color var(--dur-1) var(--ease),
+    background-color var(--dur-1) var(--ease);
 }
 
 .controls__btn:hover {
-  border-color: var(--ink);
+  color: var(--sheet);
+  background: var(--ink);
 }
 
 .controls__btn--quiet {
   color: var(--ink-2);
-  border-color: var(--line);
+  border-color: var(--rule);
+}
+
+.controls__btn--quiet:hover {
+  color: var(--sheet);
+  background: var(--ink-2);
 }

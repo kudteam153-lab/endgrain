@@ -1,6 +1,5 @@
-import { useMemo, useRef, useState } from "react";
-import { boardWidth, rowCount } from "./core/recipe.ts";
-import { speciesById } from "./core/species.ts";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PATTERNS, boardWidth, rowCount } from "./core/recipe.ts";
 import { evaluate } from "./core/warnings.ts";
 import { BoardSvg } from "./render/BoardSvg.tsx";
 import { exportJson, exportPng, exportSvg } from "./render/exportImage.ts";
@@ -13,6 +12,7 @@ export function App() {
   const svgRef = useRef<SVGSVGElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [assemblyKey, setAssemblyKey] = useState(0);
 
   const { face, error, warnings } = useMemo(() => evaluate(recipe), [recipe]);
 
@@ -21,23 +21,33 @@ export function App() {
     [recipe.lamellas],
   );
 
-  const palette = useMemo(() => {
-    const ids = [...new Set(recipe.lamellas.map((l) => l.speciesId))];
-    return ids.map(speciesById);
-  }, [recipe.lamellas]);
+  const patternName = useMemo(
+    () => PATTERNS.find((p) => p.id === recipe.pattern)?.name ?? recipe.pattern,
+    [recipe.pattern],
+  );
+
+  /**
+   * Сборка проигрывается на открытии и по кнопке, но НЕ на каждую правку
+   * ручки: иначе доска дёргается на каждом нажатии в поле ширины, и приём,
+   * который должен впечатлять, начинает мешать работать.
+   */
+  const replay = useCallback(() => setAssemblyKey((k) => k + 1), []);
+  useEffect(() => {
+    replay();
+  }, [recipe.pattern, replay]);
 
   const filename = `doska-${boardWidth(recipe)}x${rowCount(recipe) * recipe.lamellaThicknessMm}`;
 
-  const paperColor = () =>
+  const sheetColor = () =>
     getComputedStyle(document.documentElement)
-      .getPropertyValue("--surface")
+      .getPropertyValue("--sheet")
       .trim() || "#ffffff";
 
   const handlePng = async () => {
     if (!svgRef.current) return;
     setBusy(true);
     try {
-      await exportPng(svgRef.current, filename, paperColor());
+      await exportPng(svgRef.current, filename, sheetColor());
     } finally {
       setBusy(false);
     }
@@ -51,133 +61,125 @@ export function App() {
 
   return (
     <div className="app">
-      <header className="app__header">
-        <div className="app__brand">
-          <h1>Торцевая доска</h1>
-          <p className="app__tagline">
-            Узор собирается как на верстаке: склейка, рез, переклейка. Что
-            нельзя изготовить — здесь не рисуется.
+      <header className="masthead">
+        <div className="masthead__mark">
+          <h1 className="masthead__title">
+            Торцевая
+            <br />
+            доска
+          </h1>
+          <p className="masthead__sub">
+            Узор собирается как на верстаке — склейка, рез, переклейка. Что
+            нельзя изготовить, здесь не рисуется.
           </p>
         </div>
 
-        <div className="app__actions">
-          <button
-            type="button"
-            className="app__btn"
-            onClick={() =>
-              svgRef.current &&
-              exportSvg(svgRef.current, filename, paperColor())
-            }
-          >
-            SVG
-          </button>
-          <button
-            type="button"
-            className="app__btn"
-            onClick={handlePng}
-            disabled={busy}
-          >
-            {busy ? "Рисую…" : "PNG"}
-          </button>
-          <button
-            type="button"
-            className="app__btn"
-            onClick={() => exportJson(toJson(), filename)}
-          >
-            Сохранить проект
-          </button>
-          <button
-            type="button"
-            className="app__btn"
-            onClick={() => fileRef.current?.click()}
-          >
-            Открыть проект
-          </button>
-          <input
-            ref={fileRef}
-            className="app__file"
-            type="file"
-            accept="application/json,.json"
-            onChange={(e) => void handleImport(e.target.files?.[0])}
-          />
-        </div>
+        <dl className="masthead__meta">
+          <div className="masthead__field">
+            <dt>Лист</dt>
+            <dd className="num">01</dd>
+          </div>
+          <div className="masthead__field">
+            <dt>Единицы</dt>
+            <dd className="num">мм</dd>
+          </div>
+          <div className="masthead__field">
+            <dt>Плашек</dt>
+            <dd className="num">{rowCount(recipe)}</dd>
+          </div>
+          <div className="masthead__field">
+            <dt>Ширина</dt>
+            <dd className="num">{boardWidth(recipe)}</dd>
+          </div>
+        </dl>
       </header>
 
       <main className="app__main">
-        <aside className="app__panel" aria-label="Параметры доски">
+        <aside className="rail" aria-label="Параметры доски">
           <Controls recipe={recipe} patch={patch} onReset={reset} />
         </aside>
 
-        <section className="app__stage">
-          <div className="app__paper">
+        <section className="stage">
+          <div className="stage__bar">
+            <button type="button" className="btn btn--accent" onClick={replay}>
+              Собрать заново
+            </button>
+            <div className="stage__spacer" />
+            <button
+              type="button"
+              className="btn"
+              onClick={() =>
+                svgRef.current &&
+                exportSvg(svgRef.current, filename, sheetColor())
+              }
+            >
+              SVG
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={handlePng}
+              disabled={busy}
+            >
+              {busy ? "Рисую" : "PNG"}
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => exportJson(toJson(), filename)}
+            >
+              Сохранить
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => fileRef.current?.click()}
+            >
+              Открыть
+            </button>
+            <input
+              ref={fileRef}
+              className="stage__file"
+              type="file"
+              accept="application/json,.json"
+              onChange={(e) => void handleImport(e.target.files?.[0])}
+            />
+          </div>
+
+          <div className="plate">
             {face ? (
               <BoardSvg
                 ref={svgRef}
                 face={face}
                 thicknessMm={recipe.boardHMm}
                 lamellaWidths={lamellaWidths}
+                patternName={patternName}
+                kerfMm={recipe.kerfMm}
+                seed={recipe.seed}
+                assemblyKey={assemblyKey}
               />
             ) : (
-              <p className="app__blocked">{error}</p>
+              <div className="plate__blocked">
+                <p className="label">Так доска не собирается</p>
+                <p className="plate__blocked-text">{error}</p>
+              </div>
             )}
           </div>
 
-          <div className="app__readout">
-            <dl className="app__specs">
-              <div>
-                <dt>Ширина</dt>
-                <dd className="num">{boardWidth(recipe)} мм</dd>
-              </div>
-              <div>
-                <dt>Длина</dt>
-                <dd className="num">
-                  {rowCount(recipe) * recipe.lamellaThicknessMm} мм
-                </dd>
-              </div>
-              <div>
-                <dt>Толщина</dt>
-                <dd className="num">{recipe.boardHMm} мм</dd>
-              </div>
-              <div>
-                <dt>Плашек</dt>
-                <dd className="num">{rowCount(recipe)}</dd>
-              </div>
-            </dl>
-
-            <ul className="app__palette">
-              {palette.map((s) => (
-                <li key={s.id} className="app__swatch">
-                  <span className="app__chip" data-species={s.id}>
-                    <svg viewBox="0 0 12 12" aria-hidden="true">
-                      <rect width="12" height="12" fill={s.color} />
-                    </svg>
-                  </span>
-                  {s.name}
-                </li>
-              ))}
-            </ul>
-          </div>
-
           {(importError || warnings.length > 0) && (
-            <ul className="app__warnings">
+            <ul className="notes">
               {importError && (
-                <li className="app__warning app__warning--alarm">
-                  {importError}
-                </li>
+                <li className="note note--alarm">{importError}</li>
               )}
               {warnings.map((w) => (
                 <li
                   key={w.id}
                   className={
-                    w.severity === "alarm"
-                      ? "app__warning app__warning--alarm"
-                      : "app__warning"
+                    w.severity === "alarm" ? "note note--alarm" : "note"
                   }
                 >
-                  {w.text}
-                  {w.source && (
-                    <span className="app__warning-source">{w.source}</span>
-                  )}
+                  <span className="note__text">{w.text}</span>
+                  {w.source && <span className="note__source">{w.source}</span>}
                 </li>
               ))}
             </ul>

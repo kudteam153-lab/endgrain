@@ -1,4 +1,4 @@
-/* Чертёж доски. Цвета и ритм — только токены из index.css (#D-11). */
+/* Лист чертежа. Цвета и ритм — только токены из index.css (#D-11, #D-12). */
 
 .board-svg {
   display: block;
@@ -32,17 +32,12 @@
   text-anchor: middle;
 }
 
-.board-svg__note {
-  fill: var(--ink-2);
-  font-family: var(--font-mono);
-}
-
 .board-svg__lamellas line {
   stroke: var(--ink-3);
 }
 
 .board-svg__lamellas circle {
-  fill: var(--surface);
+  fill: var(--sheet);
   stroke: var(--ink-3);
 }
 
@@ -51,4 +46,154 @@
   font-family: var(--font-mono);
   text-anchor: middle;
   dominant-baseline: central;
+}
+
+/* --- Штамп ----------------------------------------------------------------- */
+
+.board-svg__stamp line {
+  stroke: var(--ink-3);
+}
+
+.board-svg__stamp-frame {
+  fill: none;
+  stroke: var(--rule-strong);
+}
+
+.board-svg__stamp-label {
+  fill: var(--ink-2);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.board-svg__stamp-value {
+  fill: var(--ink);
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+
+.board-svg__stamp-value--lg {
+  letter-spacing: var(--tracking-display);
+}
+
+/*
+ * Укладка плашек. Ряд въезжает слева и встаёт на место — ровно та
+ * последовательность, которую исполняет модель: плашка за плашкой.
+ * Задержка задаётся nth-child, а не инлайновым стилем: инлайновые стили в
+ * JSX выключают половину проверок детектора (#D-10).
+ *
+ * Рядов бывает больше сорока — тогда лишние встают без задержки. Это
+ * осознанная граница: доска из сорока плашек уже собирается три секунды,
+ * дольше держать зрителя незачем.
+ */
+@keyframes board-row-in {
+  from {
+    opacity: 0;
+    transform: translateX(-9%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.board-svg__row {
+  transform-box: fill-box;
+  transform-origin: 0 50%;
+  animation: board-row-in var(--dur-3) var(--ease) both;
+}
+
+.board-svg__row:nth-child(1) {
+  animation-delay: calc(0 * var(--stagger));
+}
+.board-svg__row:nth-child(2) {
+  animation-delay: calc(1 * var(--stagger));
+}
+.board-svg__row:nth-child(3) {
+  animation-delay: calc(2 * var(--stagger));
+}
+.board-svg__row:nth-child(4) {
+  animation-delay: calc(3 * var(--stagger));
+}
+.board-svg__row:nth-child(5) {
+  animation-delay: calc(4 * var(--stagger));
+}
+.board-svg__row:nth-child(6) {
+  animation-delay: calc(5 * var(--stagger));
+}
+.board-svg__row:nth-child(7) {
+  animation-delay: calc(6 * var(--stagger));
+}
+.board-svg__row:nth-child(8) {
+  animation-delay: calc(7 * var(--stagger));
+}
+.board-svg__row:nth-child(9) {
+  animation-delay: calc(8 * var(--stagger));
+}
+.board-svg__row:nth-child(10) {
+  animation-delay: calc(9 * var(--stagger));
+}
+.board-svg__row:nth-child(11) {
+  animation-delay: calc(10 * var(--stagger));
+}
+.board-svg__row:nth-child(12) {
+  animation-delay: calc(11 * var(--stagger));
+}
+.board-svg__row:nth-child(13) {
+  animation-delay: calc(12 * var(--stagger));
+}
+.board-svg__row:nth-child(14) {
+  animation-delay: calc(13 * var(--stagger));
+}
+.board-svg__row:nth-child(15) {
+  animation-delay: calc(14 * var(--stagger));
+}
+.board-svg__row:nth-child(16) {
+  animation-delay: calc(15 * var(--stagger));
+}
+.board-svg__row:nth-child(17) {
+  animation-delay: calc(16 * var(--stagger));
+}
+.board-svg__row:nth-child(18) {
+  animation-delay: calc(17 * var(--stagger));
+}
+.board-svg__row:nth-child(19) {
+  animation-delay: calc(18 * var(--stagger));
+}
+.board-svg__row:nth-child(20) {
+  animation-delay: calc(19 * var(--stagger));
+}
+.board-svg__row:nth-child(21) {
+  animation-delay: calc(20 * var(--stagger));
+}
+.board-svg__row:nth-child(22) {
+  animation-delay: calc(21 * var(--stagger));
+}
+.board-svg__row:nth-child(23) {
+  animation-delay: calc(22 * var(--stagger));
+}
+.board-svg__row:nth-child(24) {
+  animation-delay: calc(23 * var(--stagger));
+}
+.board-svg__row:nth-child(25) {
+  animation-delay: calc(24 * var(--stagger));
+}
+.board-svg__row:nth-child(26) {
+  animation-delay: calc(25 * var(--stagger));
+}
+.board-svg__row:nth-child(27) {
+  animation-delay: calc(26 * var(--stagger));
+}
+.board-svg__row:nth-child(28) {
+  animation-delay: calc(27 * var(--stagger));
+}
+.board-svg__row:nth-child(29) {
+  animation-delay: calc(28 * var(--stagger));
+}
+.board-svg__row:nth-child(30) {
+  animation-delay: calc(29 * var(--stagger));
+}
+.board-svg__row:nth-child(n + 31) {
+  animation-delay: calc(30 * var(--stagger));
 }
