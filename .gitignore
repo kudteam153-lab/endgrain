@@ -28,3 +28,11 @@ pnpm-debug.log*
 
 # macOS
 .DS_Store
+
+# --- impeccable ---------------------------------------------------------------
+# Скиллы качаются отдельно от npm-пакета (`npx impeccable skills install`) и
+# весят 3.4 МБ вендорных скриптов. В git не кладём по той же причине, по какой
+# не кладём node_modules: это восстановимый артефакт, а репозиторий публичный и
+# идёт в заявку. Версия инструмента закреплена в package.json.
+# Восстановить: npx impeccable skills install -y --providers=claude --scope=project --no-hooks
+.claude/skills/impeccable/
