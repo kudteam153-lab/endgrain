@@ -2,10 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { generateRecipe } from "./core/generate.ts";
 import { PATTERNS } from "./core/recipe.ts";
 import type { Recipe } from "./core/recipe.ts";
+import { formatLength } from "./core/units.ts";
 import { evaluate } from "./core/warnings.ts";
 import { BoardSvg } from "./render/BoardSvg.tsx";
 import { exportJson, exportPng, exportSvg } from "./render/exportImage.ts";
 import { Controls } from "./ui/Controls.tsx";
+import { CutSheet } from "./ui/CutSheet.tsx";
 import { Gallery } from "./ui/Gallery.tsx";
 import { useFavourites } from "./state/useFavourites.ts";
 import { useRecipe } from "./state/useRecipe.ts";
@@ -23,6 +25,7 @@ export function App() {
   const [busy, setBusy] = useState(false);
   const [assemblyKey, setAssemblyKey] = useState(0);
   const [galleryFrom, setGalleryFrom] = useState<number | null>(null);
+  const [sheet, setSheet] = useState<"drawing" | "cutlist">("drawing");
 
   const { face, project, error, warnings } = useMemo(
     () => evaluate(recipe),
@@ -122,11 +125,11 @@ export function App() {
         <dl className="masthead__meta">
           <div className="masthead__field">
             <dt>Лист</dt>
-            <dd className="num">01</dd>
+            <dd className="num">{sheet === "drawing" ? "01" : "02"}</dd>
           </div>
           <div className="masthead__field">
             <dt>Единицы</dt>
-            <dd className="num">мм</dd>
+            <dd className="num">{recipe.units === "mm" ? "мм" : "дюймы"}</dd>
           </div>
           <div className="masthead__field">
             <dt>Плашек</dt>
@@ -134,7 +137,9 @@ export function App() {
           </div>
           <div className="masthead__field">
             <dt>Ширина</dt>
-            <dd className="num">{project?.boardWMm ?? "—"}</dd>
+            <dd className="num">
+              {project ? formatLength(project.boardWMm, recipe.units) : "—"}
+            </dd>
           </div>
         </dl>
       </header>
@@ -142,6 +147,57 @@ export function App() {
       <main className="app__main">
         <aside className="rail" aria-label="Параметры доски">
           <Controls recipe={recipe} patch={patch} onReset={reset} />
+
+          {/*
+            Файловые действия переехали сюда с панели над листом: с приходом
+            второго листа (#D-17) кнопки перестали помещаться в строку и
+            сползали во вторую, отнимая высоту у чертежа (#D-13). Здесь они и
+            по смыслу на месте — это работа с проектом, а не с изображением.
+          */}
+          <section className="rail__files">
+            <h2 className="label">Файл</h2>
+            <div className="rail__buttons">
+              <button
+                type="button"
+                className="btn"
+                onClick={() =>
+                  svgRef.current &&
+                  exportSvg(svgRef.current, filename, sheetColor())
+                }
+              >
+                SVG
+              </button>
+              <button
+                type="button"
+                className="btn"
+                onClick={handlePng}
+                disabled={busy}
+              >
+                {busy ? "Рисую" : "PNG"}
+              </button>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => exportJson(toJson(), filename)}
+              >
+                Сохранить
+              </button>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => fileRef.current?.click()}
+              >
+                Открыть
+              </button>
+              <input
+                ref={fileRef}
+                className="stage__file"
+                type="file"
+                accept="application/json,.json"
+                onChange={(e) => void handleImport(e.target.files?.[0])}
+              />
+            </div>
+          </section>
         </aside>
 
         <section className="stage">
@@ -170,49 +226,39 @@ export function App() {
             >
               Печать
             </button>
-            <div className="stage__spacer" />
-            <button
-              type="button"
-              className="btn"
-              onClick={() =>
-                svgRef.current &&
-                exportSvg(svgRef.current, filename, sheetColor())
-              }
-            >
-              SVG
-            </button>
-            <button
-              type="button"
-              className="btn"
-              onClick={handlePng}
-              disabled={busy}
-            >
-              {busy ? "Рисую" : "PNG"}
-            </button>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => exportJson(toJson(), filename)}
-            >
-              Сохранить
-            </button>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => fileRef.current?.click()}
-            >
-              Открыть
-            </button>
-            <input
-              ref={fileRef}
-              className="stage__file"
-              type="file"
-              accept="application/json,.json"
-              onChange={(e) => void handleImport(e.target.files?.[0])}
-            />
+
+            <div className="stage__sheets" role="radiogroup" aria-label="Лист">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={sheet === "drawing"}
+                className="stage__sheet"
+                onClick={() => setSheet("drawing")}
+              >
+                01 Чертёж
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={sheet === "cutlist"}
+                className="stage__sheet"
+                onClick={() => setSheet("cutlist")}
+              >
+                02 Раскрой
+              </button>
+            </div>
           </div>
 
-          <div className="plate" ref={plateRef}>
+          {/*
+            Оба листа держатся в DOM всегда: скрытый прячется классом, а на
+            печать уходят оба подряд (#D-14 печатал один). Мастеру нужен
+            комплект — чертёж и раскрой, — а не тот лист, который он забыл
+            переключить перед печатью.
+          */}
+          <div
+            className={sheet === "drawing" ? "plate" : "plate plate--offscreen"}
+            ref={plateRef}
+          >
             {face ? (
               <BoardSvg
                 ref={svgRef}
@@ -228,6 +274,23 @@ export function App() {
             ) : (
               <div className="plate__blocked">
                 <p className="label">Так доска не собирается</p>
+                <p className="plate__blocked-text">{error}</p>
+              </div>
+            )}
+          </div>
+
+          <div
+            className={
+              sheet === "cutlist"
+                ? "plate plate--paper"
+                : "plate plate--paper plate--offscreen"
+            }
+          >
+            {face ? (
+              <CutSheet recipe={recipe} />
+            ) : (
+              <div className="plate__blocked">
+                <p className="label">Считать нечего</p>
                 <p className="plate__blocked-text">{error}</p>
               </div>
             )}

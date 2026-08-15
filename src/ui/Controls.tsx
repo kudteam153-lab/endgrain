@@ -234,6 +234,37 @@ export function Controls({ recipe, patch, onReset }: Props) {
       <section className="controls__group">
         <h2 className="label">Размеры доски</h2>
 
+        <div className="controls__row">
+          <span className="controls__label">Единицы</span>
+          <div
+            className="controls__segmented"
+            role="radiogroup"
+            aria-label="Единицы измерения"
+          >
+            {(
+              [
+                ["mm", "мм"],
+                ["in", "дюймы"],
+              ] as const
+            ).map(([id, name]) => (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={recipe.units === id}
+                className="controls__seg"
+                onClick={() => patch({ units: id })}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="controls__aside">
+          Ввод остаётся в миллиметрах — так размечена пила. В дюймы переводятся
+          чертёж и раскрой: дробями по шестнадцатым, как на рулетке.
+        </p>
+
         <Field
           label="Длина"
           unit="мм"

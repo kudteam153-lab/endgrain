@@ -383,9 +383,12 @@ interface StampBarProps {
  */
 function StampBar({ width, y, rowH, fields, u }: StampBarProps) {
   const pad = 2 * u;
-  const split = width * 0.68;
-  const colA = width * 0.24;
-  const colB = width * 0.46;
+  // Разметка нижней строки пересчитана под самое длинное значение: габарит
+  // «280×392×40» — десять знаков. На прежних долях он налезал на соседнюю
+  // графу, и в печати читалось «280×392×403.2 мм» — размер, которого нет.
+  const split = width * 0.7;
+  const colA = width * 0.22;
+  const colB = width * 0.5;
   const [name, species, pattern, size, kerf, scale, slices, seed] = fields;
 
   return (
@@ -430,14 +433,14 @@ function StampBar({ width, y, rowH, fields, u }: StampBarProps) {
         x={colA + pad}
         top={y + rowH * 2}
         label={size![0]}
-        value={size![1]}
+        value={clipToWidth(size![1], colB - colA - pad * 2, 2.6 * u)}
         u={u}
       />
       <StampField
         x={colB + pad}
         top={y + rowH * 2}
         label={kerf![0]}
-        value={kerf![1]}
+        value={clipToWidth(kerf![1], split - colB - pad * 2, 2.6 * u)}
         u={u}
       />
       <StampField

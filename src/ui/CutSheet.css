@@ -1,0 +1,158 @@
+/*
+ * Лист 02 — тот же кульман, что и чертёж: волосяные линии, нулевой радиус,
+ * моноширинные числа. Таблица здесь — рабочий документ, по которому пилят,
+ * поэтому колонки чисел выровнены по правому краю и набраны табличными
+ * цифрами: столбик, в котором цифры пляшут, читается с ошибками.
+ */
+
+.cut-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--s-5);
+  color: var(--ink);
+}
+
+.cut-sheet__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-bottom: var(--s-3);
+  border-bottom: var(--frame) solid var(--rule-strong);
+}
+
+.cut-sheet__title {
+  font-size: var(--text-xl);
+  font-weight: 500;
+  letter-spacing: var(--tracking-display);
+  text-transform: uppercase;
+}
+
+.cut-sheet__lead {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-2);
+}
+
+.cut-sheet__block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* --- Таблицы ---------------------------------------------------------------- */
+
+.cut-sheet__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.cut-sheet__table th {
+  padding: var(--s-1) var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--ink-2);
+  border-bottom: var(--hairline) solid var(--rule-strong);
+}
+
+.cut-sheet__table td {
+  padding: var(--s-1) var(--s-2);
+  border-bottom: var(--hairline) solid var(--rule);
+}
+
+.cut-sheet__table .num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.cut-sheet__table tfoot td {
+  font-weight: 500;
+  border-top: var(--hairline) solid var(--rule-strong);
+  border-bottom: 0;
+}
+
+/* --- Шаги ------------------------------------------------------------------- */
+
+.cut-sheet__steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin: 0;
+  padding-left: var(--s-5);
+}
+
+.cut-sheet__step::marker {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--ink-2);
+}
+
+.cut-sheet__step-text {
+  margin: 0;
+  font-size: var(--text-md);
+  line-height: var(--leading-snug);
+}
+
+.cut-sheet__note {
+  margin: var(--s-1) 0 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--ink-2);
+}
+
+/* Нехватка заготовки — единственное красное на листе: по нему не отпилишь. */
+.cut-sheet__short {
+  margin: var(--s-1) 0 0;
+  padding: var(--s-1) var(--s-2);
+  font-size: var(--text-sm);
+  color: var(--ink);
+  background: var(--alarm-soft);
+  border-left: var(--rule-accent) solid var(--alarm);
+}
+
+/* --- Сводка ------------------------------------------------------------------ */
+
+.cut-sheet__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-5);
+  margin: var(--s-2) 0 0;
+}
+
+.cut-sheet__facts dt {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.cut-sheet__facts dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-lg);
+}
+
+@media (max-width: 64rem) {
+  .cut-sheet {
+    overflow-y: visible;
+    padding: var(--s-4);
+  }
+
+  .cut-sheet__table {
+    font-size: var(--text-2xs);
+  }
+}

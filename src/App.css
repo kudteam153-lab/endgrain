@@ -103,6 +103,21 @@
   border-right: var(--hairline) solid var(--rule);
 }
 
+.rail__files {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin-top: var(--s-5);
+  padding-top: var(--s-5);
+  border-top: var(--hairline) solid var(--rule);
+}
+
+.rail__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
 .stage {
   height: 100%;
   min-height: 0;
@@ -125,6 +140,35 @@
 
 .stage__spacer {
   flex: 1;
+}
+
+/* Переключатель листов. Не вкладки: лист — это лист, и у него есть номер. */
+
+.stage__sheets {
+  display: flex;
+  border: var(--hairline) solid var(--rule);
+}
+
+.stage__sheet {
+  padding: var(--s-2) var(--s-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--ink-2);
+  background: transparent;
+  border: 0;
+  border-right: var(--hairline) solid var(--rule);
+  cursor: pointer;
+}
+
+.stage__sheet:last-child {
+  border-right: 0;
+}
+
+.stage__sheet[aria-checked="true"] {
+  color: var(--ink);
+  background: var(--sheet-sunken);
 }
 
 .stage__file {
@@ -197,6 +241,20 @@
     );
   border: var(--hairline) solid var(--rule-strong);
   box-shadow: var(--shadow-plate-sm);
+}
+
+/*
+ * Неактивный лист остаётся в DOM ради печати: комплект уходит на бумагу
+ * целиком, каким бы листом ни закончил работу мастер.
+ */
+.plate--offscreen {
+  display: none;
+}
+
+/* Лист с таблицами: миллиметровка под текстом мешает читать столбцы цифр. */
+.plate--paper {
+  padding: 0;
+  background-image: none;
 }
 
 .plate__blocked {
@@ -370,6 +428,29 @@
     background-image: none;
     border: 0;
     box-shadow: none;
+  }
+
+  /* На бумагу уходит комплект: чертёж, затем раскрой. Скрытый на экране лист
+     здесь возвращается — иначе мастер печатает то, что случайно осталось
+     переключено, и едет в магазин без списка заготовок. */
+  .plate--offscreen {
+    display: flex;
+  }
+
+  .plate + .plate {
+    break-before: page;
+  }
+
+  /* Лист раскроя — текстовый: высоту задаёт содержимое, прокрутки на бумаге
+     нет, а фиксированные 262 мм обрезали бы таблицу на длинной доске. */
+  .plate--paper {
+    height: auto;
+  }
+
+  .cut-sheet {
+    height: auto;
+    overflow: visible;
+    padding: 0;
   }
 
   /* Сборка на бумаге не проигрывается: печать может застать её на середине,
