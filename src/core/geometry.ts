@@ -1,4 +1,4 @@
-import type { Cell, Face, Grain, Piece, Transform } from './types.ts'
+import type { Cell, Face, Grain, Piece, Transform } from "./types.ts";
 
 /**
  * Геометрия лица: склейка, рез, трансформы.
@@ -9,28 +9,34 @@ import type { Cell, Face, Grain, Piece, Transform } from './types.ts'
  * это как разные доски.
  */
 
-const MICRON = 1e-3
+const MICRON = 1e-3;
 
 /** Округление до микрона. Столярная точность — десятая миллиметра, запас есть. */
-export const mm = (v: number): number => Math.round(v / MICRON) * MICRON
+export const mm = (v: number): number => Math.round(v / MICRON) * MICRON;
 
-const cell = (xMm: number, yMm: number, wMm: number, hMm: number, speciesId: string): Cell => ({
+const cell = (
+  xMm: number,
+  yMm: number,
+  wMm: number,
+  hMm: number,
+  speciesId: string,
+): Cell => ({
   xMm: mm(xMm),
   yMm: mm(yMm),
   wMm: mm(wMm),
   hMm: mm(hMm),
   speciesId,
-})
+});
 
 /** Ячейки в устойчивом порядке: сверху вниз, слева направо. */
 const sortCells = (cells: Cell[]): Cell[] =>
-  [...cells].sort((a, b) => a.yMm - b.yMm || a.xMm - b.xMm)
+  [...cells].sort((a, b) => a.yMm - b.yMm || a.xMm - b.xMm);
 
 const face = (wMm: number, hMm: number, cells: Cell[]): Face => ({
   wMm: mm(wMm),
   hMm: mm(hMm),
   cells: sortCells(cells),
-})
+});
 
 /**
  * Склейка заготовок.
@@ -41,35 +47,35 @@ const face = (wMm: number, hMm: number, cells: Cell[]): Face => ({
  * это не ограничение модели, это то, что не собирается на верстаке.
  */
 export function glueUp(pieces: Piece[]): Piece {
-  if (pieces.length === 0) throw new Error('Склейка без заготовок')
+  if (pieces.length === 0) throw new Error("Склейка без заготовок");
 
-  const grain = pieces[0]!.grain
-  const mixed = pieces.find((p) => p.grain !== grain)
+  const grain = pieces[0]!.grain;
+  const mixed = pieces.find((p) => p.grain !== grain);
   if (mixed) {
     throw new Error(
       `Склейка заготовок с разным волокном (${grain} и ${mixed.grain}) — так доска не собирается`,
-    )
+    );
   }
 
-  const cells: Cell[] = []
-  let wMm = 0
-  let hMm = 0
+  const cells: Cell[] = [];
+  let wMm = 0;
+  let hMm = 0;
 
-  if (grain === 'long') {
+  if (grain === "long") {
     for (const p of pieces) {
       for (const c of p.face.cells) {
-        cells.push(cell(wMm + c.xMm, c.yMm, c.wMm, c.hMm, c.speciesId))
+        cells.push(cell(wMm + c.xMm, c.yMm, c.wMm, c.hMm, c.speciesId));
       }
-      wMm += p.face.wMm
-      hMm = Math.max(hMm, p.face.hMm)
+      wMm += p.face.wMm;
+      hMm = Math.max(hMm, p.face.hMm);
     }
   } else {
     for (const p of pieces) {
       for (const c of p.face.cells) {
-        cells.push(cell(c.xMm, hMm + c.yMm, c.wMm, c.hMm, c.speciesId))
+        cells.push(cell(c.xMm, hMm + c.yMm, c.wMm, c.hMm, c.speciesId));
       }
-      hMm += p.face.hMm
-      wMm = Math.max(wMm, p.face.wMm)
+      hMm += p.face.hMm;
+      wMm = Math.max(wMm, p.face.wMm);
     }
   }
 
@@ -78,7 +84,7 @@ export function glueUp(pieces: Piece[]): Piece {
     // Длину панели задаёт самая короткая заготовка: длиннее её склейка не будет.
     lengthMm: Math.min(...pieces.map((p) => p.lengthMm)),
     grain,
-  }
+  };
 }
 
 /**
@@ -88,23 +94,35 @@ export function glueUp(pieces: Piece[]): Piece {
  * `count` — сколько плашек берём, а не сколько выйдет. Сколько выйдет,
  * считает `sliceYield` — расхождение между ними это отход (FACTS.md #F-03).
  */
-export function crosscut(panel: Piece, sliceWidthMm: number, count: number): Piece[] {
-  if (count < 1) throw new Error('Поперечный рез без плашек')
+export function crosscut(
+  panel: Piece,
+  sliceWidthMm: number,
+  count: number,
+): Piece[] {
+  if (count < 1) throw new Error("Поперечный рез без плашек");
   return Array.from({ length: count }, () => ({
-    face: face(panel.face.wMm, panel.face.hMm, panel.face.cells.map((c) => ({ ...c }))),
+    face: face(
+      panel.face.wMm,
+      panel.face.hMm,
+      panel.face.cells.map((c) => ({ ...c })),
+    ),
     lengthMm: mm(sliceWidthMm),
-    grain: 'end' as Grain,
-  }))
+    grain: "end" as Grain,
+  }));
 }
 
 /**
  * Сколько плашек выйдет из заготовки. Последний кусок в счёт не идёт:
  * короткий остаток нельзя безопасно подать на пилу (FACTS.md #F-03).
  */
-export function sliceYield(panelLengthMm: number, sliceWidthMm: number, kerfMm: number): number {
-  const step = sliceWidthMm + kerfMm
-  if (step <= 0) return 0
-  return Math.max(0, Math.floor(panelLengthMm / step))
+export function sliceYield(
+  panelLengthMm: number,
+  sliceWidthMm: number,
+  kerfMm: number,
+): number {
+  const step = sliceWidthMm + kerfMm;
+  if (step <= 0) return 0;
+  return Math.max(0, Math.floor(panelLengthMm / step));
 }
 
 /**
@@ -115,21 +133,26 @@ export function sliceYield(panelLengthMm: number, sliceWidthMm: number, kerfMm: 
  * `i * (sliceWidthMm + kerfMm)`, а не на `i * sliceWidthMm`. Считать без
  * пропила значит получить узор, который на верстаке уедет на 3.2 мм за полосу.
  */
-export function rip(panel: Piece, sliceWidthMm: number, kerfMm: number, count: number): Piece[] {
-  if (count < 1) throw new Error('Продольный рез без полос')
-  const step = sliceWidthMm + kerfMm
-  const out: Piece[] = []
+export function rip(
+  panel: Piece,
+  sliceWidthMm: number,
+  kerfMm: number,
+  count: number,
+): Piece[] {
+  if (count < 1) throw new Error("Продольный рез без полос");
+  const step = sliceWidthMm + kerfMm;
+  const out: Piece[] = [];
 
   for (let i = 0; i < count; i++) {
-    const x0 = i * step
-    const x1 = x0 + sliceWidthMm
-    const cells: Cell[] = []
+    const x0 = i * step;
+    const x1 = x0 + sliceWidthMm;
+    const cells: Cell[] = [];
 
     for (const c of panel.face.cells) {
-      const left = Math.max(c.xMm, x0)
-      const right = Math.min(c.xMm + c.wMm, x1)
+      const left = Math.max(c.xMm, x0);
+      const right = Math.min(c.xMm + c.wMm, x1);
       if (right - left > MICRON) {
-        cells.push(cell(left - x0, c.yMm, right - left, c.hMm, c.speciesId))
+        cells.push(cell(left - x0, c.yMm, right - left, c.hMm, c.speciesId));
       }
     }
 
@@ -137,10 +160,10 @@ export function rip(panel: Piece, sliceWidthMm: number, kerfMm: number, count: n
       face: face(sliceWidthMm, panel.face.hMm, cells),
       lengthMm: panel.lengthMm,
       grain: panel.grain,
-    })
+    });
   }
 
-  return out
+  return out;
 }
 
 /**
@@ -151,96 +174,121 @@ export function rip(panel: Piece, sliceWidthMm: number, kerfMm: number, count: n
  * они пойдут отдельными строками половинной ширины (FACTS.md #F-07).
  */
 export function shiftX(f: Face, dxMm: number): Face {
-  const w = f.wMm
-  if (w <= 0) return f
-  const dx = ((dxMm % w) + w) % w
-  if (dx < MICRON) return face(f.wMm, f.hMm, f.cells.map((c) => ({ ...c })))
+  const w = f.wMm;
+  if (w <= 0) return f;
+  const dx = ((dxMm % w) + w) % w;
+  if (dx < MICRON)
+    return face(
+      f.wMm,
+      f.hMm,
+      f.cells.map((c) => ({ ...c })),
+    );
 
-  const cells: Cell[] = []
+  const cells: Cell[] = [];
   for (const c of f.cells) {
-    const start = c.xMm + dx
-    const end = start + c.wMm
+    // Начало приводится по модулю ширины СРАЗУ. Без этого ячейка, уехавшая за
+    // правый край целиком (start >= w — а так бывает на каждом сдвиге, кратном
+    // ширине ламели), давала отрицательную «голову», и хвост получался шире
+    // самой ячейки: он ложился поверх соседа и подменял его породу. На
+    // диагонали это съедало по ламели в каждом ряду.
+    const start = (c.xMm + dx) % w;
+    const end = start + c.wMm;
+
     if (end <= w + MICRON) {
-      // Целиком помещается: раз правый край не вышел за ширину, левый тоже внутри.
-      cells.push(cell(start, c.yMm, c.wMm, c.hMm, c.speciesId))
-    } else {
-      // Ячейка перешла через правый край — разрезаем по краю склейки.
-      const headW = w - start
-      if (headW > MICRON) cells.push(cell(start, c.yMm, headW, c.hMm, c.speciesId))
-      const tailW = c.wMm - headW
-      if (tailW > MICRON) cells.push(cell(0, c.yMm, tailW, c.hMm, c.speciesId))
+      cells.push(cell(start, c.yMm, c.wMm, c.hMm, c.speciesId));
+      continue;
     }
+
+    // Ячейка перешла через правый край — разрезаем по месту склейки.
+    // start строго меньше w, поэтому обе части положительны по построению.
+    const headW = w - start;
+    if (headW > MICRON)
+      cells.push(cell(start, c.yMm, headW, c.hMm, c.speciesId));
+    const tailW = c.wMm - headW;
+    if (tailW > MICRON) cells.push(cell(0, c.yMm, tailW, c.hMm, c.speciesId));
   }
-  return face(f.wMm, f.hMm, cells)
+  return face(f.wMm, f.hMm, cells);
 }
 
 /** Сумма ширин первых `steps` ячеек верхнего ряда — шаг сдвига для шахматки. */
 function stepWidth(f: Face, steps: number): number {
-  const topY = Math.min(...f.cells.map((c) => c.yMm))
-  const row = f.cells.filter((c) => Math.abs(c.yMm - topY) < MICRON).sort((a, b) => a.xMm - b.xMm)
-  let sum = 0
+  const topY = Math.min(...f.cells.map((c) => c.yMm));
+  const row = f.cells
+    .filter((c) => Math.abs(c.yMm - topY) < MICRON)
+    .sort((a, b) => a.xMm - b.xMm);
+  let sum = 0;
   for (let i = 0; i < steps; i++) {
-    const c = row[i % row.length]
-    if (c) sum += c.wMm
+    const c = row[i % row.length];
+    if (c) sum += c.wMm;
   }
-  return sum
+  return sum;
 }
 
 /** Первая ячейка верхнего ряда — от неё считается кирпичное смещение. */
 function firstCellWidth(f: Face): number {
-  const topY = Math.min(...f.cells.map((c) => c.yMm))
-  const row = f.cells.filter((c) => Math.abs(c.yMm - topY) < MICRON).sort((a, b) => a.xMm - b.xMm)
-  return row[0]?.wMm ?? 0
+  const topY = Math.min(...f.cells.map((c) => c.yMm));
+  const row = f.cells
+    .filter((c) => Math.abs(c.yMm - topY) < MICRON)
+    .sort((a, b) => a.xMm - b.xMm);
+  return row[0]?.wMm ?? 0;
 }
 
 export function applyTransform(piece: Piece, t: Transform): Piece {
-  const f = piece.face
-  const { wMm, hMm } = f
+  const f = piece.face;
+  const { wMm, hMm } = f;
 
   switch (t.op) {
-    case 'none':
-      return piece
+    case "none":
+      return piece;
 
-    case 'flip180':
+    case "flip180":
       return {
         ...piece,
         face: face(
           wMm,
           hMm,
           f.cells.map((c) =>
-            cell(wMm - c.xMm - c.wMm, hMm - c.yMm - c.hMm, c.wMm, c.hMm, c.speciesId),
+            cell(
+              wMm - c.xMm - c.wMm,
+              hMm - c.yMm - c.hMm,
+              c.wMm,
+              c.hMm,
+              c.speciesId,
+            ),
           ),
         ),
-      }
+      };
 
-    case 'mirror':
+    case "mirror":
       return {
         ...piece,
         face: face(
           wMm,
           hMm,
-          f.cells.map((c) => cell(wMm - c.xMm - c.wMm, c.yMm, c.wMm, c.hMm, c.speciesId)),
+          f.cells.map((c) =>
+            cell(wMm - c.xMm - c.wMm, c.yMm, c.wMm, c.hMm, c.speciesId),
+          ),
         ),
-      }
+      };
 
-    case 'rot90':
+    case "rot90":
       return {
         ...piece,
         face: face(
           hMm,
           wMm,
           f.cells.map((c) =>
-            t.dir === 'cw'
+            t.dir === "cw"
               ? cell(hMm - c.yMm - c.hMm, c.xMm, c.hMm, c.wMm, c.speciesId)
               : cell(c.yMm, wMm - c.xMm - c.wMm, c.hMm, c.wMm, c.speciesId),
           ),
         ),
-      }
+      };
 
-    case 'halfWidth':
-      return { ...piece, face: shiftX(f, firstCellWidth(f) / 2) }
+    case "halfWidth":
+      return { ...piece, face: shiftX(f, firstCellWidth(f) / 2) };
 
-    case 'offset':
-      return { ...piece, face: shiftX(f, stepWidth(f, t.steps)) }
+    case "offset":
+      return { ...piece, face: shiftX(f, stepWidth(f, t.steps)) };
   }
 }

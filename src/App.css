@@ -1,0 +1,246 @@
+/* Раскладка одного экрана: ручки слева, доска справа (CORE_PRINCIPLES §3). */
+
+.app {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Шапка ----------------------------------------------------------------- */
+
+.app__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-5) var(--s-6) var(--s-4);
+  border-bottom: var(--hairline) solid var(--line);
+}
+
+.app__brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  max-width: 46ch;
+}
+
+.app__tagline {
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--ink-2);
+}
+
+.app__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.app__btn {
+  padding: var(--s-2) var(--s-4);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  color: var(--ink);
+  background: var(--surface);
+  border: var(--hairline) solid var(--ink-3);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-1) var(--ease),
+    color var(--dur-1) var(--ease);
+}
+
+.app__btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.app__btn:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+.app__file {
+  display: none;
+}
+
+/* --- Основная раскладка ---------------------------------------------------- */
+
+.app__main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(19rem, 22rem) 1fr;
+  align-items: start;
+  gap: var(--s-6);
+  padding: var(--s-5) var(--s-6) var(--s-7);
+}
+
+.app__panel {
+  position: sticky;
+  top: var(--s-5);
+  padding: var(--s-4);
+  background: var(--surface);
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.app__stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+}
+
+/*
+ * Рабочее поле — лист миллиметровки. Сетка бледная намеренно: под доской она
+ * не видна вовсе, а по краям задаёт контекст чертежа. Решение #D-11 отдельно
+ * оговаривает риск — сетка, которая шумит под узором, ломает главное.
+ */
+.app__paper {
+  padding: var(--s-6);
+  background-color: var(--surface);
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      var(--grid) 0 var(--hairline),
+      transparent var(--hairline) var(--grid-step)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      var(--grid) 0 var(--hairline),
+      transparent var(--hairline) var(--grid-step)
+    );
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.app__blocked {
+  padding: var(--s-6) var(--s-4);
+  text-align: center;
+  color: var(--alarm);
+  font-size: var(--text-md);
+}
+
+/* --- Сводка ---------------------------------------------------------------- */
+
+.app__readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.app__specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-5);
+  margin: 0;
+}
+
+.app__specs dt {
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.app__specs dd {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.app__palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app__swatch {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+
+.app__chip svg {
+  display: block;
+  width: var(--swatch);
+  height: var(--swatch);
+  border-radius: 1px;
+  outline: var(--hairline) solid var(--line);
+}
+
+/* --- Предупреждения --------------------------------------------------------
+ * Появляются, когда есть что сказать. Постоянной зелёной плашки «всё
+ * хорошо» нет: она превращает предупреждения в фон (#D-09).
+ */
+
+.app__warnings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app__warning {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--s-3) var(--s-4);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--ink);
+  background: var(--surface);
+  border-left: var(--rule-accent) solid var(--ink-3);
+  border-radius: var(--radius);
+}
+
+.app__warning--alarm {
+  background: var(--alarm-soft);
+  border-left-color: var(--alarm);
+}
+
+.app__warning-source {
+  font-size: var(--text-2xs);
+  color: var(--ink-2);
+}
+
+/* --- Узкий экран -----------------------------------------------------------
+ * Требование скромное: «не разваливается на телефоне» (GOAL §Anti-scope).
+ * Панель уходит под доску, липкость снимается.
+ */
+
+@media (max-width: 60rem) {
+  .app__header,
+  .app__main {
+    padding-left: var(--s-4);
+    padding-right: var(--s-4);
+  }
+
+  .app__main {
+    grid-template-columns: 1fr;
+    gap: var(--s-5);
+  }
+
+  .app__panel {
+    position: static;
+    order: 2;
+  }
+
+  .app__stage {
+    order: 1;
+  }
+
+  .app__paper {
+    padding: var(--s-4);
+  }
+}

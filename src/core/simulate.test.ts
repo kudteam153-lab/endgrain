@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { glueUp } from './geometry.ts'
+import { glueUp, shiftX } from './geometry.ts'
 import { simulate, shortfall } from './simulate.ts'
 import { renderAscii } from './testing.ts'
-import type { Project, Strip, Transform } from './types.ts'
+import type { Face, Project, Strip, Transform } from './types.ts'
 
 /**
  * Проверка гипотезы дня 1 (DECISIONS.md #D-01): узор торцевой доски выражается
@@ -208,5 +208,69 @@ describe('инварианты модели', () => {
     // 600 мм при плашке 46 и пропиле 3.2 дают 12 штук (#F-03). Просим 20.
     const p = twoLevel([strip('oak', 40, 20)], 20, [])
     expect(shortfall(p)).toBe(8)
+  })
+})
+
+describe('регрессия — сдвиг, кратный ширине ламели', () => {
+  /**
+   * Ловится только глазами на готовом узоре: модель отдавала верное число
+   * ячеек, ASCII-сетка показывала правильную диагональ (она берёт первое
+   * попадание в точку), а на экране ряд терял ламель — ячейка двойной ширины
+   * ложилась поверх соседа и подменяла породу.
+   *
+   * Причина: начало не приводилось по модулю ширины, и у ячейки, уехавшей за
+   * правый край целиком, «голова» уходила в минус. Такой сдвиг случается на
+   * каждом ряду диагонали — то есть на самом заметном узоре из пяти.
+   */
+  const row: Face = {
+    wMm: 320,
+    hMm: 40,
+    cells: Array.from({ length: 8 }, (_, i) => ({
+      xMm: i * 40,
+      yMm: 0,
+      wMm: 40,
+      hMm: 40,
+      speciesId: `s${i}`,
+    })),
+  }
+
+  it('сохраняет число ячеек и их ширины на любом сдвиге', () => {
+    for (const dx of [0, 20, 40, 80, 120, 200, 280, 320, 360]) {
+      const out = shiftX(row, dx)
+      const total = out.cells.reduce((s, c) => s + c.wMm, 0)
+      expect(total, `сумма ширин при dx=${dx}`).toBeCloseTo(row.wMm, 6)
+      expect(out.cells.every((c) => c.wMm > 0), `положительные ширины при dx=${dx}`).toBe(true)
+      expect(
+        out.cells.every((c) => c.xMm >= 0 && c.xMm + c.wMm <= row.wMm + 1e-6),
+        `ячейки внутри ширины при dx=${dx}`,
+      ).toBe(true)
+    }
+  })
+
+  it('не теряет ни одной породы на сдвиге в целую ламель', () => {
+    for (const dx of [40, 80, 120, 200]) {
+      const out = shiftX(row, dx)
+      const species = new Set(out.cells.map((c) => c.speciesId))
+      expect(species.size, `пород на месте при dx=${dx}`).toBe(8)
+    }
+  })
+
+  it('диагональ на восьми ламелях не съедает ламели по краю', () => {
+    const strips = ['oak', 'maple', 'walnut', 'maple', 'oak', 'padauk', 'maple', 'walnut'].map(
+      (id) => strip(id, 40, 40),
+    )
+    const face = simulate(
+      twoLevel(
+        strips,
+        8,
+        Array.from({ length: 8 }, (_, i) => ({ op: 'offset' as const, steps: i })),
+      ),
+    )
+    // Каждый ряд — та же последовательность, только провёрнутая. Значит в
+    // любом ряду ровно столько же ячеек, сколько ламелей.
+    for (let r = 0; r < 8; r++) {
+      const inRow = face.cells.filter((c) => Math.abs(c.yMm - r * 40) < 1e-6)
+      expect(inRow.length, `ячеек в ряду ${r}`).toBe(8)
+    }
   })
 })

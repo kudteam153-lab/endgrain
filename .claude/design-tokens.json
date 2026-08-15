@@ -1,8 +1,20 @@
 {
-  "_comment": "Конфиг для check_design_tokens.py и хука design-check.sh. Дизайн-система проекта выбирается на дне 2 (design-system-selection) — до этого allowed_hex минимальный, то есть любой цвет в UI-файле ловится. Так и задумано: палитра появляется в token_files, а не расползается по компонентам. Породы дерева (Species.color) — данные предметной области, их место в src/core/species.ts, он объявлен token-файлом.",
+  "_comment": "Конфиг для check_design_tokens.py и хука design-check.sh. Дизайн-система — «Чертёж» (#D-11), палитра объявлена в src/index.css. В компонентах цвета только через var(--…): список ниже намеренно короткий, чтобы хардкод ловился. Породы дерева (Species.color) — данные предметной области, их место в src/core/species.ts, он объявлен token-файлом.",
 
   "allowed_hex": [
-    "#000000", "#000", "#ffffff", "#fff", "transparent", "currentColor", "none"
+    "#000000", "#000", "#ffffff", "#fff", "transparent", "currentColor", "none",
+
+    "#eef1f4", "#fafbfc", "#e4e9ee",
+    "#14181d", "#5a6472", "#7a8794",
+    "#d6dde4", "#dfe5eb",
+    "#1b3fa0", "#e7ecf8",
+    "#c1272d", "#fbeceb",
+
+    "#171a1f", "#1e232a", "#12151a",
+    "#e6ebf0", "#a3adba", "#78838f",
+    "#2c333c", "#262d35",
+    "#7fa0ec", "#10151f", "#1d2637",
+    "#f0837f", "#2c1b1c"
   ],
 
   "token_files": [

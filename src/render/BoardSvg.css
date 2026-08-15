@@ -1,0 +1,54 @@
+/* Чертёж доски. Цвета и ритм — только токены из index.css (#D-11). */
+
+.board-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.board-svg__seams rect {
+  fill: none;
+  stroke: var(--seam);
+  stroke-opacity: 0.3;
+}
+
+.board-svg__outline {
+  fill: none;
+  stroke: var(--seam);
+}
+
+.board-svg__dims line {
+  stroke: var(--ink-3);
+}
+
+.board-svg__arrow {
+  fill: var(--ink-3);
+}
+
+.board-svg__dim-text {
+  fill: var(--ink-2);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-anchor: middle;
+}
+
+.board-svg__note {
+  fill: var(--ink-2);
+  font-family: var(--font-mono);
+}
+
+.board-svg__lamellas line {
+  stroke: var(--ink-3);
+}
+
+.board-svg__lamellas circle {
+  fill: var(--surface);
+  stroke: var(--ink-3);
+}
+
+.board-svg__tick-text {
+  fill: var(--ink-2);
+  font-family: var(--font-mono);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
