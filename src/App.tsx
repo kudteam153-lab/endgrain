@@ -5,12 +5,15 @@ import { BoardSvg } from "./render/BoardSvg.tsx";
 import { exportJson, exportPng, exportSvg } from "./render/exportImage.ts";
 import { Controls } from "./ui/Controls.tsx";
 import { useRecipe } from "./state/useRecipe.ts";
+import { useBoxAspect } from "./render/useBoxAspect.ts";
 import "./App.css";
 
 export function App() {
   const { recipe, patch, reset, toJson, fromJson, importError } = useRecipe();
   const svgRef = useRef<SVGSVGElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const plateRef = useRef<HTMLDivElement>(null);
+  const boxAspect = useBoxAspect(plateRef);
   const [busy, setBusy] = useState(false);
   const [assemblyKey, setAssemblyKey] = useState(0);
 
@@ -63,11 +66,7 @@ export function App() {
     <div className="app">
       <header className="masthead">
         <div className="masthead__mark">
-          <h1 className="masthead__title">
-            Торцевая
-            <br />
-            доска
-          </h1>
+          <h1 className="masthead__title">Торцевая доска</h1>
           <p className="masthead__sub">
             Узор собирается как на верстаке — склейка, рез, переклейка. Что
             нельзя изготовить, здесь не рисуется.
@@ -146,7 +145,7 @@ export function App() {
             />
           </div>
 
-          <div className="plate">
+          <div className="plate" ref={plateRef}>
             {face ? (
               <BoardSvg
                 ref={svgRef}
@@ -156,6 +155,7 @@ export function App() {
                 patternName={patternName}
                 kerfMm={recipe.kerfMm}
                 seed={recipe.seed}
+                boxAspect={boxAspect}
                 assemblyKey={assemblyKey}
               />
             ) : (

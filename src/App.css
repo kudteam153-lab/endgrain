@@ -2,45 +2,56 @@
  * Раскладка: кульман, на нём лист. Ручки слева, доска справа
  * (CORE_PRINCIPLES §3). Структура держится волосяными линиями и жёсткой
  * офсетной тенью — ни одного размытия и ни одного скругления (#D-12).
+ *
+ * ГЛАВНОЕ ПРАВИЛО РАСКЛАДКИ (#D-13). Экран — один, и он не прокручивается.
+ * Мастер в мастерской должен видеть чертёж целиком и править его, а не искать
+ * доску скроллом. Отсюда: высота приложения равна высоте окна, лист занимает
+ * весь остаток по вертикали, а чертёж ВПИСЫВАЕТСЯ в этот бокс.
+ *
+ * Из этого же следует, что раскладка не дрожит. Пока высота листа выводилась
+ * из пропорций чертежа, каждая правка ширины ламели меняла пропорции — и
+ * страница прыгала на каждом нажатии. Теперь бокс задан экраном, а меняется
+ * только масштаб внутри него.
  */
 
 .app {
-  min-height: 100dvh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* --- Шапка ------------------------------------------------------------------
- * Заголовок-монумент и лента полей рядом с ним: так выглядит верх листа, а не
- * «логотип и кнопки». Кнопки уехали к доске — они относятся к ней.
+ * Одна строка заголовка и лента полей рядом: шапка ест высоту, которой нет.
  */
 
 .masthead {
+  flex: 0 0 auto;
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: var(--s-6);
-  padding: var(--s-7) var(--s-7) var(--s-5);
+  gap: var(--s-5);
+  padding: var(--s-4) var(--s-5);
   border-bottom: var(--frame) solid var(--rule-strong);
 }
 
 .masthead__mark {
   display: flex;
   flex-direction: column;
-  gap: var(--s-3);
-  max-width: 52ch;
+  gap: var(--s-1);
+  min-width: 0;
 }
 
 .masthead__title {
-  font-size: var(--text-3xl);
+  font-size: var(--text-2xl);
   font-weight: 500;
   letter-spacing: var(--tracking-display);
   text-transform: uppercase;
 }
 
 .masthead__sub {
-  max-width: 46ch;
+  max-width: 68ch;
   font-size: var(--text-sm);
   line-height: var(--leading-snug);
   color: var(--ink-2);
@@ -53,7 +64,7 @@
 }
 
 .masthead__field {
-  padding: var(--s-1) var(--s-5);
+  padding: 0 var(--s-4);
   border-right: var(--hairline) solid var(--rule);
 }
 
@@ -68,37 +79,44 @@
 
 .masthead__field dd {
   margin: 0;
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   line-height: var(--leading-tight);
 }
 
-/* --- Раскладка --------------------------------------------------------------- */
+/* --- Раскладка ---------------------------------------------------------------
+ * `min-height: 0` обязателен: без него grid-ячейка раздувается под содержимое
+ * и вся конструкция «в высоту экрана» перестаёт работать.
+ */
 
 .app__main {
   flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: minmax(18rem, 21rem) 1fr;
-  align-items: start;
+  grid-template-columns: minmax(17rem, 20rem) 1fr;
 }
 
 .rail {
-  position: sticky;
-  top: 0;
-  padding: var(--s-5) var(--s-5) var(--s-8);
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--s-4);
   border-right: var(--hairline) solid var(--rule);
 }
 
 .stage {
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--s-5);
+  gap: var(--s-3);
   min-width: 0;
-  padding: var(--s-5) var(--s-7) var(--s-8);
+  padding: var(--s-3) var(--s-5) var(--s-4);
 }
 
 /* --- Панель действий --------------------------------------------------------- */
 
 .stage__bar {
+  flex: 0 0 auto;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -116,7 +134,7 @@
 .btn {
   padding: var(--s-2) var(--s-4);
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-size: var(--text-2xs);
   font-weight: 500;
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
@@ -156,12 +174,15 @@
 }
 
 /* --- Лист --------------------------------------------------------------------
- * Белый лист на кульмане: жёсткая офсетная тень вместо размытой. Глубина
- * читается как «бумага поверх стола», а не как всплывающая карточка.
+ * Занимает весь остаток высоты. Чертёж вписывается внутрь (см. BoardSvg.css):
+ * бокс постоянный, меняется только масштаб.
  */
 
 .plate {
-  padding: var(--s-8) var(--s-8) var(--s-7);
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  padding: var(--s-4);
   background-color: var(--sheet);
   background-image:
     repeating-linear-gradient(
@@ -175,15 +196,16 @@
       transparent var(--hairline) var(--grid-step)
     );
   border: var(--hairline) solid var(--rule-strong);
-  box-shadow: var(--shadow-plate);
+  box-shadow: var(--shadow-plate-sm);
 }
 
 .plate__blocked {
+  margin: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--s-3);
-  padding: var(--s-9) var(--s-5);
+  padding: var(--s-5);
   text-align: center;
 }
 
@@ -197,23 +219,29 @@
 /* --- Замечания ----------------------------------------------------------------
  * Появляются, когда есть что сказать. Постоянной зелёной плашки «всё хорошо»
  * нет: она превращает предупреждения в фон (#D-09).
+ *
+ * Высота ограничена: список предупреждений не имеет права выдавить чертёж за
+ * пределы экрана — ради чертежа сюда и пришли.
  */
 
 .notes {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--s-2);
+  gap: var(--s-1);
   margin: 0;
   padding: 0;
   list-style: none;
-  max-width: 84ch;
+  max-height: 8rem;
+  overflow-y: auto;
 }
 
 .note {
   display: flex;
-  flex-direction: column;
-  gap: var(--s-1);
-  padding: var(--s-3) var(--s-4);
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
   font-size: var(--text-sm);
   line-height: var(--leading-snug);
   color: var(--ink);
@@ -235,17 +263,20 @@
 }
 
 /* --- Узкий экран ---------------------------------------------------------------
- * Требование скромное: «не разваливается на телефоне» (GOAL §Anti-scope).
- * Лист идёт первым — ради него открывают.
+ * На телефоне «весь экран без прокрутки» недостижимо и не нужно: требование
+ * скромное — «не разваливается» (GOAL §Anti-scope). Высота отпускается,
+ * страница снова прокручивается, лист идёт первым.
  */
 
 @media (max-width: 64rem) {
-  .masthead {
-    padding: var(--s-5) var(--s-4) var(--s-4);
+  .app {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
   }
 
-  .masthead__title {
-    font-size: var(--text-2xl);
+  .masthead {
+    padding: var(--s-4);
   }
 
   .masthead__meta {
@@ -263,20 +294,27 @@
   }
 
   .rail {
-    position: static;
+    height: auto;
+    overflow-y: visible;
     order: 2;
-    padding: var(--s-5) var(--s-4) var(--s-8);
     border-right: 0;
     border-top: var(--hairline) solid var(--rule);
   }
 
   .stage {
+    height: auto;
     order: 1;
-    padding: var(--s-4) var(--s-4) var(--s-5);
+    padding: var(--s-4);
   }
 
   .plate {
-    padding: var(--s-5) var(--s-4);
-    box-shadow: var(--shadow-plate-sm);
+    /* Без фиксированной высоты чертёж вписывать не во что: на телефоне
+       задаём ему пропорциональный бокс от ширины экрана. */
+    height: 70vh;
+  }
+
+  .notes {
+    max-height: none;
+    overflow-y: visible;
   }
 }

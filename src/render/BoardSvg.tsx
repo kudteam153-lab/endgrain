@@ -4,7 +4,7 @@ import type { Face } from "../core/types.ts";
 import "./BoardSvg.css";
 
 /**
- * Доска как лист сборочного чертежа (DECISIONS.md #D-11, #D-12).
+ * Доска как лист сборочного чертежа (DECISIONS.md #D-11, #D-12, #D-13).
  *
  * Три вещи, которые делают это чертежом, а не картинкой с рамкой:
  *
@@ -15,13 +15,13 @@ import "./BoardSvg.css";
  *    изготавливаем, из чего, в каком масштабе, каким резом. И уезжает в
  *    экспорт вместе с узором, то есть выгруженная картинка остаётся
  *    документом, а не просто картинкой.
- * 3. Доска собирается на глазах — ряд за рядом, как плашки на верстаке. Это
- *    не анимация ради анимации: проигрывается ровно та последовательность,
- *    которую исполняет модель (#D-01).
+ * 3. Доска собирается на глазах — ряд за рядом, как плашки на верстаке.
+ *    Проигрывается ровно та последовательность, которую исполняет модель.
  *
- * Толщина линий и кегль выводятся из размера доски (`u`), а не задаются в
- * пикселях: иначе на доске 200 мм выноски закрывают узор, а на 800 мм
- * превращаются в волосок.
+ * Штамп встаёт снизу или сбоку — смотря какой формы бокс листа (#D-13).
+ * Выбор не косметический: на альбомном экране вертикальная доска со штампом
+ * снизу занимала половину высоты, а половина бумаги пустовала по бокам.
+ * Штамп сбоку добирает эту ширину, и чертёж вырастает почти вдвое.
  */
 
 interface Props {
@@ -31,6 +31,8 @@ interface Props {
   patternName: string;
   kerfMm: number;
   seed: number;
+  /** Ширина бокса, делённая на высоту. Определяет, куда встанет штамп. */
+  boxAspect: number;
   /** Меняется — сборка проигрывается заново. */
   assemblyKey: number;
 }
@@ -47,9 +49,9 @@ function drawingScale(widthMm: number): string {
 
 /**
  * Обрезка значения графы по ФАКТИЧЕСКОЙ ширине клетки, а не по числу символов
- * на глаз. Предыдущая версия резала по константе, и «Дуб · Клён · Орех ·
- * Падук» спокойно вылезал за линию в соседнюю графу: клетка узкая, а 26
- * символов в лимит укладывались.
+ * на глаз. Версия с константой пропускала «Дуб · Клён · Орех · Падук» — 26
+ * символов в лимит укладывались, а в узкую клетку нет, и текст перечёркивал
+ * соседнюю линию.
  *
  * 0.56 — средняя ширина знака IBM Plex Sans в долях кегля. Оценка грубая и
  * намеренно консервативная: лучше обрезать на знак раньше, чем перечеркнуть
@@ -65,32 +67,23 @@ function clipToWidth(
 }
 
 export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
-  { face, thicknessMm, lamellaWidths, patternName, kerfMm, seed, assemblyKey },
+  {
+    face,
+    thicknessMm,
+    lamellaWidths,
+    patternName,
+    kerfMm,
+    seed,
+    boxAspect,
+    assemblyKey,
+  },
   ref,
 ) {
   const u = Math.max(face.wMm, face.hMm) / 100;
 
-  const padTop = 14 * u;
-  const padRight = 16 * u;
+  const padTop = 13 * u;
   const padLeft = 4 * u;
-
-  // Штамп: сетка задана явно — три строки одной высоты. Первая версия считала
-  // позиции долями строки, и графы налезли друг на друга.
-  const stampTop = face.hMm + 13 * u;
-  const stampRow = 7 * u;
-  const stampH = stampRow * 3;
-  const stampSplit = face.wMm * 0.68;
-  const colA = face.wMm * 0.24;
-  const colB = face.wMm * 0.46;
-  const pad = 2 * u;
-  const padBottom = 13 * u + stampH + 3 * u;
-
-  const vb = {
-    x: -padLeft,
-    y: -padTop,
-    w: face.wMm + padLeft + padRight,
-    h: face.hMm + padTop + padBottom,
-  };
+  const tickZone = 10 * u;
 
   /** Ячейки по рядам — ряд это одна плашка, и укладывается он целиком. */
   const rows = useMemo(() => {
@@ -127,11 +120,58 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
     [face.cells],
   );
 
+  const fields: Array<[string, string]> = [
+    ["изделие", "Торцевая разделочная доска"],
+    ["породы", speciesList.join(" · ")],
+    ["узор", patternName],
+    ["габарит", `${fmt(face.wMm)}×${fmt(face.hMm)}×${fmt(thicknessMm)}`],
+    ["пропил", `${fmt(kerfMm)} мм`],
+    ["масштаб", drawingScale(face.wMm)],
+    ["плашек", String(rows.length)],
+    ["seed", String(seed)],
+  ];
+
+  // Две раскладки листа. Берём ту, чьи пропорции ближе к пропорциям бокса, —
+  // тогда чертёж занимает бокс целиком, а не летает в пустой бумаге.
+  const tall = {
+    stampRowH: 7 * u,
+    get stampH() {
+      return this.stampRowH * 3;
+    },
+    get vbW() {
+      return padLeft + face.wMm + 16 * u;
+    },
+    get vbH() {
+      return padTop + face.hMm + tickZone + 3 * u + this.stampH + 3 * u;
+    },
+  };
+  const wide = {
+    gapX: 15 * u,
+    stampW: 70 * u,
+    stampRowH: 6.5 * u,
+    get stampH() {
+      return this.stampRowH * fields.length;
+    },
+    get vbW() {
+      return padLeft + face.wMm + this.gapX + this.stampW + 4 * u;
+    },
+    get vbH() {
+      return padTop + face.hMm + tickZone + 3 * u;
+    },
+  };
+
+  const fit = (w: number, h: number) => Math.abs(Math.log(w / h / boxAspect));
+  const isWide = fit(wide.vbW, wide.vbH) < fit(tall.vbW, tall.vbH);
+
+  const vb = isWide
+    ? { w: wide.vbW, h: wide.vbH }
+    : { w: tall.vbW, h: tall.vbH };
+
   return (
     <svg
       ref={ref}
       className="board-svg"
-      viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
+      viewBox={`${-padLeft} ${-padTop} ${vb.w} ${vb.h}`}
       role="img"
       aria-label={`Чертёж доски ${fmt(face.wMm)} на ${fmt(face.hMm)} миллиметров, узор «${patternName}»`}
     >
@@ -175,46 +215,46 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
       />
 
       <g className="board-svg__dims" strokeWidth={0.28 * u}>
-        <line x1={0} y1={-1.5 * u} x2={0} y2={-9 * u} />
-        <line x1={face.wMm} y1={-1.5 * u} x2={face.wMm} y2={-9 * u} />
+        <line x1={0} y1={-1.5 * u} x2={0} y2={-8.5 * u} />
+        <line x1={face.wMm} y1={-1.5 * u} x2={face.wMm} y2={-8.5 * u} />
         <line
           x1={0}
-          y1={-7 * u}
+          y1={-6.5 * u}
           x2={face.wMm}
-          y2={-7 * u}
+          y2={-6.5 * u}
           markerStart="url(#eg-arrow)"
           markerEnd="url(#eg-arrow)"
         />
         <text
           className="board-svg__dim-text"
           x={face.wMm / 2}
-          y={-8.6 * u}
-          fontSize={3.6 * u}
+          y={-8 * u}
+          fontSize={3.4 * u}
         >
           {fmt(face.wMm)}
         </text>
 
-        <line x1={face.wMm + 1.5 * u} y1={0} x2={face.wMm + 9 * u} y2={0} />
+        <line x1={face.wMm + 1.5 * u} y1={0} x2={face.wMm + 8.5 * u} y2={0} />
         <line
           x1={face.wMm + 1.5 * u}
           y1={face.hMm}
-          x2={face.wMm + 9 * u}
+          x2={face.wMm + 8.5 * u}
           y2={face.hMm}
         />
         <line
-          x1={face.wMm + 7 * u}
+          x1={face.wMm + 6.5 * u}
           y1={0}
-          x2={face.wMm + 7 * u}
+          x2={face.wMm + 6.5 * u}
           y2={face.hMm}
           markerStart="url(#eg-arrow)"
           markerEnd="url(#eg-arrow)"
         />
         <text
           className="board-svg__dim-text"
-          x={face.wMm + 8.6 * u}
+          x={face.wMm + 8 * u}
           y={face.hMm / 2}
-          fontSize={3.6 * u}
-          transform={`rotate(-90 ${face.wMm + 8.6 * u} ${face.hMm / 2})`}
+          fontSize={3.4 * u}
+          transform={`rotate(-90 ${face.wMm + 8 * u} ${face.hMm / 2})`}
         >
           {fmt(face.hMm)}
         </text>
@@ -233,15 +273,15 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
               />
               <circle
                 cx={t.x}
-                cy={face.hMm + 6.8 * u}
-                r={2.6 * u}
+                cy={face.hMm + 6.6 * u}
+                r={2.5 * u}
                 strokeWidth={0.28 * u}
               />
               <text
                 className="board-svg__tick-text"
                 x={t.x}
-                y={face.hMm + 6.8 * u}
-                fontSize={2.8 * u}
+                y={face.hMm + 6.6 * u}
+                fontSize={2.7 * u}
               >
                 {t.index}
               </text>
@@ -250,118 +290,24 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
         </g>
       )}
 
-      {/* --- Штамп (основная надпись) ---------------------------------------
-          Три строки. Первая — что изготавливаем, вторая — из чего, третья —
-          чем и в каком размере. Графы данных отделены вертикалью справа.
-          Породы занимают строку целиком: в узкой клетке они не помещались и
-          перечёркивали соседнюю линию. */}
-      <g className="board-svg__stamp" strokeWidth={0.28 * u}>
-        <rect
-          className="board-svg__stamp-frame"
-          x={0}
-          y={stampTop}
+      {isWide ? (
+        <StampColumn
+          x={face.wMm + wide.gapX}
+          y={Math.max(0, face.hMm - wide.stampH)}
+          width={wide.stampW}
+          rowH={wide.stampRowH}
+          fields={fields}
+          u={u}
+        />
+      ) : (
+        <StampBar
           width={face.wMm}
-          height={stampH}
-          strokeWidth={0.5 * u}
-        />
-        <line
-          x1={stampSplit}
-          y1={stampTop}
-          x2={stampSplit}
-          y2={stampTop + stampH}
-        />
-        <line
-          x1={0}
-          y1={stampTop + stampRow}
-          x2={face.wMm}
-          y2={stampTop + stampRow}
-        />
-        <line
-          x1={0}
-          y1={stampTop + stampRow * 2}
-          x2={face.wMm}
-          y2={stampTop + stampRow * 2}
-        />
-        <line
-          x1={colA}
-          y1={stampTop + stampRow * 2}
-          x2={colA}
-          y2={stampTop + stampH}
-        />
-        <line
-          x1={colB}
-          y1={stampTop + stampRow * 2}
-          x2={colB}
-          y2={stampTop + stampH}
-        />
-
-        <StampField
-          x={pad}
-          top={stampTop}
-          label="изделие"
-          value={clipToWidth(
-            "Торцевая разделочная доска",
-            stampSplit - pad * 2,
-            3.2 * u,
-          )}
-          u={u}
-          large
-        />
-        <StampField
-          x={pad}
-          top={stampTop + stampRow}
-          label="породы"
-          value={clipToWidth(
-            speciesList.join(" · "),
-            stampSplit - pad * 2,
-            2.6 * u,
-          )}
+          y={face.hMm + tickZone + 3 * u}
+          rowH={tall.stampRowH}
+          fields={fields}
           u={u}
         />
-        <StampField
-          x={pad}
-          top={stampTop + stampRow * 2}
-          label="узор"
-          value={clipToWidth(patternName, colA - pad * 2, 2.6 * u)}
-          u={u}
-        />
-        <StampField
-          x={colA + pad}
-          top={stampTop + stampRow * 2}
-          label="габарит"
-          value={`${fmt(face.wMm)}×${fmt(face.hMm)}×${fmt(thicknessMm)}`}
-          u={u}
-        />
-        <StampField
-          x={colB + pad}
-          top={stampTop + stampRow * 2}
-          label="пропил"
-          value={`${fmt(kerfMm)} мм`}
-          u={u}
-        />
-
-        <StampField
-          x={stampSplit + pad}
-          top={stampTop}
-          label="масштаб"
-          value={drawingScale(face.wMm)}
-          u={u}
-        />
-        <StampField
-          x={stampSplit + pad}
-          top={stampTop + stampRow}
-          label="плашек"
-          value={String(rows.length)}
-          u={u}
-        />
-        <StampField
-          x={stampSplit + pad}
-          top={stampTop + stampRow * 2}
-          label="seed"
-          value={String(seed)}
-          u={u}
-        />
-      </g>
+      )}
 
       <defs>
         <marker
@@ -379,6 +325,145 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
     </svg>
   );
 });
+
+type Field = [string, string];
+
+interface StampColumnProps {
+  x: number;
+  y: number;
+  width: number;
+  rowH: number;
+  fields: Field[];
+  u: number;
+}
+
+/** Штамп колонкой — для альбомного листа. Графы идут сверху вниз. */
+function StampColumn({ x, y, width, rowH, fields, u }: StampColumnProps) {
+  const pad = 2 * u;
+  return (
+    <g className="board-svg__stamp" strokeWidth={0.28 * u}>
+      <rect
+        className="board-svg__stamp-frame"
+        x={x}
+        y={y}
+        width={width}
+        height={rowH * fields.length}
+        strokeWidth={0.5 * u}
+      />
+      {fields.map(([label, value], i) => (
+        <g key={label}>
+          {i > 0 && (
+            <line x1={x} y1={y + rowH * i} x2={x + width} y2={y + rowH * i} />
+          )}
+          <StampField
+            x={x + pad}
+            top={y + rowH * i}
+            label={label}
+            value={clipToWidth(value, width - pad * 2, (i === 0 ? 3 : 2.6) * u)}
+            u={u}
+            large={i === 0}
+          />
+        </g>
+      ))}
+    </g>
+  );
+}
+
+interface StampBarProps {
+  width: number;
+  y: number;
+  rowH: number;
+  fields: Field[];
+  u: number;
+}
+
+/**
+ * Штамп лентой под доской — для портретного листа. Три строки: что
+ * изготавливаем, из чего, чем и в каком размере.
+ */
+function StampBar({ width, y, rowH, fields, u }: StampBarProps) {
+  const pad = 2 * u;
+  const split = width * 0.68;
+  const colA = width * 0.24;
+  const colB = width * 0.46;
+  const [name, species, pattern, size, kerf, scale, slices, seed] = fields;
+
+  return (
+    <g className="board-svg__stamp" strokeWidth={0.28 * u}>
+      <rect
+        className="board-svg__stamp-frame"
+        x={0}
+        y={y}
+        width={width}
+        height={rowH * 3}
+        strokeWidth={0.5 * u}
+      />
+      <line x1={split} y1={y} x2={split} y2={y + rowH * 3} />
+      <line x1={0} y1={y + rowH} x2={width} y2={y + rowH} />
+      <line x1={0} y1={y + rowH * 2} x2={width} y2={y + rowH * 2} />
+      <line x1={colA} y1={y + rowH * 2} x2={colA} y2={y + rowH * 3} />
+      <line x1={colB} y1={y + rowH * 2} x2={colB} y2={y + rowH * 3} />
+
+      <StampField
+        x={pad}
+        top={y}
+        label={name![0]}
+        value={clipToWidth(name![1], split - pad * 2, 3.2 * u)}
+        u={u}
+        large
+      />
+      <StampField
+        x={pad}
+        top={y + rowH}
+        label={species![0]}
+        value={clipToWidth(species![1], split - pad * 2, 2.6 * u)}
+        u={u}
+      />
+      <StampField
+        x={pad}
+        top={y + rowH * 2}
+        label={pattern![0]}
+        value={clipToWidth(pattern![1], colA - pad * 2, 2.6 * u)}
+        u={u}
+      />
+      <StampField
+        x={colA + pad}
+        top={y + rowH * 2}
+        label={size![0]}
+        value={size![1]}
+        u={u}
+      />
+      <StampField
+        x={colB + pad}
+        top={y + rowH * 2}
+        label={kerf![0]}
+        value={kerf![1]}
+        u={u}
+      />
+      <StampField
+        x={split + pad}
+        top={y}
+        label={scale![0]}
+        value={scale![1]}
+        u={u}
+      />
+      <StampField
+        x={split + pad}
+        top={y + rowH}
+        label={slices![0]}
+        value={slices![1]}
+        u={u}
+      />
+      <StampField
+        x={split + pad}
+        top={y + rowH * 2}
+        label={seed![0]}
+        value={seed![1]}
+        u={u}
+      />
+    </g>
+  );
+}
 
 interface StampFieldProps {
   x: number;
@@ -404,7 +489,7 @@ function StampField({
       <text
         className="board-svg__stamp-label"
         x={x}
-        y={top + 2.4 * u}
+        y={top + 2.3 * u}
         fontSize={1.8 * u}
       >
         {label}
@@ -416,8 +501,8 @@ function StampField({
             : "board-svg__stamp-value"
         }
         x={x}
-        y={top + 5.8 * u}
-        fontSize={large ? 3.2 * u : 2.6 * u}
+        y={top + 5.5 * u}
+        fontSize={large ? 3 * u : 2.6 * u}
       >
         {value}
       </text>
