@@ -103,6 +103,13 @@ export function App() {
             <button type="button" className="btn btn--accent" onClick={replay}>
               Собрать заново
             </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => window.print()}
+            >
+              Печать
+            </button>
             <div className="stage__spacer" />
             <button
               type="button"

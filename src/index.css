@@ -157,6 +157,33 @@
   }
 }
 
+/*
+ * Печать. Токены принудительно светлые и объявлены ПОСЛЕ тёмной темы —
+ * иначе у мастера, работающего в тёмной теме, из принтера выходит чёрная
+ * страница: браузер не переключает `prefers-color-scheme` при печати, а
+ * блок с одинаковой специфичностью выигрывает тот, что ниже.
+ */
+@media print {
+  :root {
+    --table: #ffffff;
+    --sheet: #ffffff;
+    --sheet-sunken: #ffffff;
+    --ink: #111111;
+    --ink-2: #575751;
+    --ink-3: #9a9a93;
+    --rule: #d5d5d0;
+    --rule-strong: #111111;
+    --grid: #ffffff;
+    --accent: #1b3fa0;
+    --accent-ink: #ffffff;
+    --accent-soft: #e9edf9;
+    --alarm: #bf1f26;
+    --alarm-soft: #fbeceb;
+    --seam: #111111;
+    color-scheme: light;
+  }
+}
+
 *,
 *::before,
 *::after {
