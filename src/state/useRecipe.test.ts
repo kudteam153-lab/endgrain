@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseRecipe } from "./useRecipe.ts";
+import { parseRecipe } from "./parse.ts";
 import { DEFAULT_RECIPE } from "../core/recipe.ts";
 import { evaluate } from "../core/warnings.ts";
 

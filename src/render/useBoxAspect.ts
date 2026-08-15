@@ -23,6 +23,8 @@ const round = (v: number) => Math.round(v * 100) / 100;
 export function useBoxAspect(
   ref: RefObject<HTMLElement | null>,
   fallback = 1.4,
+  /** Сборка PDF: страница та же A4, но события печати браузер не шлёт. */
+  forcePage = false,
 ): number {
   const [measured, setMeasured] = useState(fallback);
   const [printing, setPrinting] = useState(false);
@@ -55,5 +57,5 @@ export function useBoxAspect(
     };
   }, []);
 
-  return printing ? A4_PRINT_ASPECT : measured;
+  return printing || forcePage ? A4_PRINT_ASPECT : measured;
 }

@@ -5,14 +5,33 @@ import type { Recipe } from "./core/recipe.ts";
 import { formatLength } from "./core/units.ts";
 import { evaluate } from "./core/warnings.ts";
 import { BoardSvg } from "./render/BoardSvg.tsx";
-import { exportJson, exportPng, exportSvg } from "./render/exportImage.ts";
+import { AssemblySvg } from "./render/AssemblySvg.tsx";
+import {
+  exportJson,
+  exportPng,
+  exportSvg,
+  serialize,
+} from "./render/exportImage.ts";
 import { Controls } from "./ui/Controls.tsx";
 import { CutSheet } from "./ui/CutSheet.tsx";
 import { Gallery } from "./ui/Gallery.tsx";
+import { shareUrl } from "./state/share.ts";
 import { useFavourites } from "./state/useFavourites.ts";
 import { useRecipe } from "./state/useRecipe.ts";
 import { useBoxAspect } from "./render/useBoxAspect.ts";
 import "./App.css";
+
+/**
+ * Класс листа. Активный виден, неактивный скрыт, а на время сборки PDF все
+ * листы уходят в экспортный бокс за краем окна: растрировать элемент с
+ * `display: none` нечем — jsPDF отвергает картинку нулевого размера. Заодно
+ * все три получают пропорции страницы, и штамп встаёт в портретную раскладку,
+ * а не в экранную альбомную.
+ */
+function plateClass(active: boolean, exporting: boolean): string {
+  if (exporting) return "plate plate--export";
+  return active ? "plate" : "plate plate--offscreen";
+}
 
 export function App() {
   const { recipe, setRecipe, patch, reset, toJson, fromJson, importError } =
@@ -21,11 +40,17 @@ export function App() {
   const svgRef = useRef<SVGSVGElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const plateRef = useRef<HTMLDivElement>(null);
-  const boxAspect = useBoxAspect(plateRef);
   const [busy, setBusy] = useState(false);
   const [assemblyKey, setAssemblyKey] = useState(0);
   const [galleryFrom, setGalleryFrom] = useState<number | null>(null);
-  const [sheet, setSheet] = useState<"drawing" | "cutlist">("drawing");
+  const [sheet, setSheet] = useState<"drawing" | "cutlist" | "assembly">(
+    "drawing",
+  );
+  const cutSheetRef = useRef<HTMLDivElement>(null);
+  const assemblyRef = useRef<SVGSVGElement>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const boxAspect = useBoxAspect(plateRef, 1.4, pdfBusy);
 
   const { face, project, error, warnings } = useMemo(
     () => evaluate(recipe),
@@ -105,6 +130,60 @@ export function App() {
     }
   };
 
+  /**
+   * PDF собирается из тех же листов, что видно на экране (#D-18). Страницы
+   * растрируются: векторный текст в PDF требует встроенного TTF, а в проекте
+   * лежат woff2 — не встал бы шрифт, и вместо инструкции получились бы пустые
+   * прямоугольники.
+   */
+  const handlePdf = async () => {
+    setPdfBusy(true);
+    // Страницы растрируются с экрана, поэтому на время сборки тёмная тема
+    // выключается принудительно: иначе из принтера выйдет чёрная бумага.
+    document.documentElement.classList.add("paper");
+    try {
+      // Кадр на то, чтобы React показал скрытые листы в экспортном боксе, а
+      // ResizeObserver пересчитал раскладку штампа под пропорции страницы.
+      await new Promise((done) => requestAnimationFrame(() => done(null)));
+      await new Promise((done) => setTimeout(done, 120));
+
+      // Библиотеки PDF грузятся по нажатию, а не при открытии страницы: они
+      // весят больше всего остального приложения вместе взятого, а нужны
+      // одному действию из десяти. Первый экран важнее.
+      const { exportPdf } = await import("./render/pdf.ts");
+
+      await exportPdf(
+        {
+          drawing: svgRef.current,
+          cutSheet: cutSheetRef.current,
+          assembly: assemblyRef.current,
+          serializeSvg: serialize,
+        },
+        filename,
+      );
+    } finally {
+      document.documentElement.classList.remove("paper");
+      setPdfBusy(false);
+    }
+  };
+
+  /**
+   * Ссылка на доску. Хеш и так обновляется на каждую правку — кнопка нужна,
+   * чтобы человек не гадал, ту ли строку копировать из адресной строки.
+   */
+  const handleShare = async () => {
+    const url = shareUrl(recipe);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Буфер недоступен (нет разрешения, http) — показываем ссылку, чтобы
+      // скопировать руками, а не молчим.
+      window.prompt("Ссылка на эту доску:", url);
+    }
+  };
+
   const handleImport = async (file: File | undefined) => {
     if (!file) return;
     fromJson(await file.text());
@@ -125,7 +204,9 @@ export function App() {
         <dl className="masthead__meta">
           <div className="masthead__field">
             <dt>Лист</dt>
-            <dd className="num">{sheet === "drawing" ? "01" : "02"}</dd>
+            <dd className="num">
+              {sheet === "drawing" ? "01" : sheet === "cutlist" ? "02" : "03"}
+            </dd>
           </div>
           <div className="masthead__field">
             <dt>Единицы</dt>
@@ -182,6 +263,9 @@ export function App() {
               >
                 Сохранить
               </button>
+              <button type="button" className="btn" onClick={handleShare}>
+                {copied ? "Скопировано" : "Ссылка"}
+              </button>
               <button
                 type="button"
                 className="btn"
@@ -222,6 +306,14 @@ export function App() {
             <button
               type="button"
               className="btn"
+              onClick={handlePdf}
+              disabled={pdfBusy}
+            >
+              {pdfBusy ? "Собираю" : "PDF"}
+            </button>
+            <button
+              type="button"
+              className="btn"
               onClick={() => window.print()}
             >
               Печать
@@ -245,6 +337,15 @@ export function App() {
                 onClick={() => setSheet("cutlist")}
               >
                 02 Раскрой
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={sheet === "assembly"}
+                className="stage__sheet"
+                onClick={() => setSheet("assembly")}
+              >
+                03 Сборка
               </button>
             </div>
           </div>
@@ -280,17 +381,25 @@ export function App() {
           </div>
 
           <div
-            className={
-              sheet === "cutlist"
-                ? "plate plate--paper"
-                : "plate plate--paper plate--offscreen"
-            }
+            ref={cutSheetRef}
+            className={`plate--paper ${plateClass(sheet === "cutlist", pdfBusy)}`}
           >
             {face ? (
               <CutSheet recipe={recipe} />
             ) : (
               <div className="plate__blocked">
                 <p className="label">Считать нечего</p>
+                <p className="plate__blocked-text">{error}</p>
+              </div>
+            )}
+          </div>
+
+          <div className={plateClass(sheet === "assembly", pdfBusy)}>
+            {face ? (
+              <AssemblySvg ref={assemblyRef} recipe={recipe} />
+            ) : (
+              <div className="plate__blocked">
+                <p className="label">Собирать нечего</p>
                 <p className="plate__blocked-text">{error}</p>
               </div>
             )}

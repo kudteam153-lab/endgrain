@@ -1,0 +1,52 @@
+/* Лист сборки. Те же линии и та же тушь, что на чертеже (#D-11, #D-12). */
+
+.assembly-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.assembly-svg__head {
+  fill: var(--ink);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+}
+
+.assembly-svg__step {
+  fill: var(--ink);
+  font-family: var(--font-sans);
+}
+
+.assembly-svg__size {
+  fill: var(--ink-2);
+  font-family: var(--font-mono);
+  dominant-baseline: middle;
+}
+
+.assembly-svg__seams rect {
+  fill: none;
+  stroke: var(--seam);
+  stroke-opacity: 0.25;
+}
+
+.assembly-svg__frame {
+  fill: none;
+  stroke: var(--rule-strong);
+}
+
+/* Линия реза — намерение, а не шов: пунктир и цвет разметки, не тушь. */
+.assembly-svg__cuts line {
+  stroke: var(--alarm);
+  stroke-opacity: 0.8;
+}
+
+/* Вид сбоку: вся заготовка и та её часть, что уйдёт в дело. */
+.assembly-svg__blank {
+  fill: var(--sheet-sunken);
+  stroke: var(--rule-strong);
+}
+
+.assembly-svg__used {
+  fill: var(--accent-soft);
+}

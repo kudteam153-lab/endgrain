@@ -35,7 +35,11 @@ function inlineComputedStyles(
     const computed = getComputedStyle(node);
     for (const prop of COPIED) {
       const value = computed.getPropertyValue(prop);
-      if (value && value !== "none" && value !== "normal") {
+      // `none` копируется наравне с цветом. Пропуск этого значения стоил
+      // экспорту узора: у швов склейки `fill: none` задан в CSS, без него
+      // копия получала заливку по умолчанию — чёрную — и прямоугольники швов
+      // закрашивали всю доску. На экране этого не видно, файл открывали редко.
+      if (value && value !== "normal") {
         target.setAttribute(prop, value.trim());
       }
     }
@@ -43,7 +47,12 @@ function inlineComputedStyles(
   }
 }
 
-function serialize(svg: SVGSVGElement, background: string): string {
+/**
+ * Экспортируется ради PDF (`pdf.ts`): страницы растрируются тем же способом,
+ * что и PNG. Второй сериализатор рядом означал бы, что картинка в файле и
+ * картинка в PDF однажды разойдутся — и разойдутся молча.
+ */
+export function serialize(svg: SVGSVGElement, background: string): string {
   const clone = svg.cloneNode(true) as SVGSVGElement;
   inlineComputedStyles(svg, clone);
 
