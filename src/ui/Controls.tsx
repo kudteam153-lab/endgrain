@@ -1,5 +1,12 @@
-import { PATTERNS, boardWidth, rowCount, sliceWidth } from "../core/recipe.ts";
-import type { Recipe } from "../core/recipe.ts";
+import {
+  PATTERNS,
+  WEAVES,
+  boardWidth,
+  lamellaSpan,
+  rowCount,
+  sliceWidth,
+} from "../core/recipe.ts";
+import type { Recipe, Weave, WeaveId } from "../core/recipe.ts";
 import { SPECIES } from "../core/species.ts";
 import { requiredBlankLength, sliceCapacity } from "../core/warnings.ts";
 import "./Controls.css";
@@ -46,6 +53,25 @@ export function Controls({ recipe, patch, onReset }: Props) {
     patch({ lamellas: recipe.lamellas.filter((_, i) => i !== index) });
   };
 
+  const weaves = recipe.weaves ?? [];
+
+  const setWeave = (index: number, next: Partial<Weave>) => {
+    patch({
+      weaves: weaves.map((w, i) => (i === index ? { ...w, ...next } : w)),
+    });
+  };
+
+  const addWeave = () => {
+    // Полоса вдвое уже панели по умолчанию: так из неё выходит хотя бы пара
+    // полос на любой раскладке, и первый же клик не даёт предупреждение.
+    patch({
+      weaves: [
+        ...weaves,
+        { stripWidthMm: 25, count: 4, kind: "rotate" as WeaveId },
+      ],
+    });
+  };
+
   const rows = rowCount(recipe);
   const capacity = sliceCapacity(recipe);
 
@@ -73,9 +99,21 @@ export function Controls({ recipe, patch, onReset }: Props) {
       <section className="controls__group">
         <h2 className="label">Ламели первой склейки</h2>
         <p className="controls__aside">
-          Ширина доски — сумма ламелей:{" "}
-          <span className="num">{boardWidth(recipe)}</span> мм. Это не поле
-          ввода, а то, что вы реально склеиваете.
+          Склеиваем <span className="num">{lamellaSpan(recipe)}</span> мм в
+          ширину.{" "}
+          {weaves.length > 0 ? (
+            <>
+              После переклейки доска выйдет{" "}
+              <span className="num">{boardWidth(recipe)}</span> мм — ширину
+              задаёт последний рез, а не сумма ламелей.
+            </>
+          ) : (
+            <>
+              Столько же будет и в доске:{" "}
+              <span className="num">{boardWidth(recipe)}</span> мм. Это не поле
+              ввода, а то, что вы реально склеиваете.
+            </>
+          )}
         </p>
 
         <ol className="controls__lamellas">
@@ -122,6 +160,75 @@ export function Controls({ recipe, patch, onReset }: Props) {
         <button type="button" className="controls__btn" onClick={addLamella}>
           Добавить ламель
         </button>
+      </section>
+
+      <section className="controls__group">
+        <h2 className="label">Переклейка</h2>
+        <p className="controls__aside">
+          Панель режут вдоль на полосы, разворачивают и склеивают заново. Один
+          рез даёт полосы, два — клетку. Без переклейки узор делится только по
+          ширине.
+        </p>
+
+        {weaves.map((w, i) => (
+          <div key={i} className="controls__weave">
+            <div className="controls__row">
+              <span className="controls__label">Рез {i + 1}</span>
+              <div
+                className="controls__segmented"
+                role="radiogroup"
+                aria-label={`Вид переклейки ${i + 1}`}
+              >
+                {WEAVES.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={w.kind === v.id}
+                    className="controls__seg"
+                    title={v.hint}
+                    onClick={() => setWeave(i, { kind: v.id })}
+                  >
+                    {v.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Field
+              label="Ширина полосы"
+              unit="мм"
+              value={w.stripWidthMm}
+              min={5}
+              max={500}
+              onChange={(v) => setWeave(i, { stripWidthMm: v })}
+            />
+            <Field
+              label="Полос"
+              unit="шт"
+              value={w.count}
+              min={2}
+              max={40}
+              onChange={(v) => setWeave(i, { count: v })}
+            />
+
+            <button
+              type="button"
+              className="controls__btn controls__btn--quiet"
+              onClick={() =>
+                patch({ weaves: weaves.filter((_, k) => k !== i) })
+              }
+            >
+              Убрать рез {i + 1}
+            </button>
+          </div>
+        ))}
+
+        {weaves.length < 2 && (
+          <button type="button" className="controls__btn" onClick={addWeave}>
+            {weaves.length === 0 ? "Добавить переклейку" : "Ещё переклейка"}
+          </button>
+        )}
       </section>
 
       <section className="controls__group">

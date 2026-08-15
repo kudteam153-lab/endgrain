@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_RECIPE } from "../core/recipe.ts";
-import type { Recipe } from "../core/recipe.ts";
+import type { Recipe, Weave } from "../core/recipe.ts";
 import { SPECIES } from "../core/species.ts";
 
 /**
@@ -54,8 +54,25 @@ export function parseRecipe(raw: unknown): Recipe | null {
   const pattern = r["pattern"];
   const units = r["units"];
 
+  // Переклейки появились на дне 3 (#D-15). Поля нет — проект сохранён раньше,
+  // и это доска в один уровень, а не битый файл.
+  const weaves = Array.isArray(r["weaves"])
+    ? r["weaves"].flatMap((w): Weave[] => {
+        if (typeof w !== "object" || w === null) return [];
+        const item = w as Record<string, unknown>;
+        const stripWidthMm = num(item["stripWidthMm"], 1, 1000);
+        const count = num(item["count"], 2, 40);
+        const kind = item["kind"];
+        if (stripWidthMm === null || count === null) return [];
+        if (kind !== "rotate" && kind !== "basket") return [];
+        return [{ stripWidthMm, count: Math.round(count), kind }];
+      })
+    : [];
+  if (weaves.length > 2) return null;
+
   return {
     lamellas,
+    weaves,
     lamellaThicknessMm: thickness,
     blankLengthMm: blank,
     boardLMm: boardL,

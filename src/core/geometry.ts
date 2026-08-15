@@ -210,12 +210,24 @@ export function shiftX(f: Face, dxMm: number): Face {
   return face(f.wMm, f.hMm, cells);
 }
 
-/** Сумма ширин первых `steps` ячеек верхнего ряда — шаг сдвига для шахматки. */
-function stepWidth(f: Face, steps: number): number {
+/**
+ * Верхний ряд ячеек, слева направо.
+ *
+ * Он же — период узора по ширине: на первой склейке это ламели, после
+ * переклейки — колонки уже двумерного рисунка. Сдвиги считаются от него, и
+ * поэтому «на одну ламель» продолжает означать «на одну колонку» и на
+ * трёхуровневой доске.
+ */
+export function topRow(f: Face): Cell[] {
   const topY = Math.min(...f.cells.map((c) => c.yMm));
-  const row = f.cells
+  return f.cells
     .filter((c) => Math.abs(c.yMm - topY) < MICRON)
     .sort((a, b) => a.xMm - b.xMm);
+}
+
+/** Сумма ширин первых `steps` ячеек верхнего ряда — шаг сдвига для шахматки. */
+function stepWidth(f: Face, steps: number): number {
+  const row = topRow(f);
   let sum = 0;
   for (let i = 0; i < steps; i++) {
     const c = row[i % row.length];
@@ -226,11 +238,7 @@ function stepWidth(f: Face, steps: number): number {
 
 /** Первая ячейка верхнего ряда — от неё считается кирпичное смещение. */
 function firstCellWidth(f: Face): number {
-  const topY = Math.min(...f.cells.map((c) => c.yMm));
-  const row = f.cells
-    .filter((c) => Math.abs(c.yMm - topY) < MICRON)
-    .sort((a, b) => a.xMm - b.xMm);
-  return row[0]?.wMm ?? 0;
+  return topRow(f)[0]?.wMm ?? 0;
 }
 
 export function applyTransform(piece: Piece, t: Transform): Piece {

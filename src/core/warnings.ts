@@ -1,8 +1,9 @@
-import { boardWidth, rowCount, sliceWidth } from "./recipe.ts";
+import { sliceYield } from "./geometry.ts";
+import { rowCount, sliceWidth } from "./recipe.ts";
 import type { Recipe } from "./recipe.ts";
-import { simulate } from "./simulate.ts";
+import { panelAt, simulate } from "./simulate.ts";
 import { buildProject } from "./recipe.ts";
-import type { Face } from "./types.ts";
+import type { Face, Project } from "./types.ts";
 
 /**
  * Видимый слой физической реализуемости (DECISIONS.md #D-09).
@@ -50,7 +51,11 @@ export function requiredBlankLength(r: Recipe): number {
   return rowCount(r) * (sliceWidth(r) + r.kerfMm);
 }
 
-export function collectWarnings(r: Recipe, face: Face): Warning[] {
+export function collectWarnings(
+  r: Recipe,
+  face: Face,
+  project: Project,
+): Warning[] {
   const out: Warning[] = [];
 
   const rows = rowCount(r);
@@ -63,6 +68,26 @@ export function collectWarnings(r: Recipe, face: Face): Warning[] {
       text: `Заготовки не хватит: нужно ${rows} плашек, из ${r.blankLengthMm} мм выйдет ${capacity}. Возьмите заготовку от ${need} мм или уменьшите длину доски.`,
       source: "длина = число плашек × (толщина + пропил) + припуск (#F-03)",
     });
+  }
+
+  // Переклейка режет панель поперёк её ширины, а не длины: ограничение здесь
+  // другое, и до дня 3 его не существовало — рез был ровно один.
+  for (const [i, level] of project.levels.entries()) {
+    if (level.cut.kind !== "rip") continue;
+    const panel = panelAt(project.levels, i);
+    const available = sliceYield(
+      panel.face.wMm,
+      level.cut.sliceWidthMm,
+      level.cut.kerfMm,
+    );
+    if (level.pieceCount > available) {
+      out.push({
+        id: `weave-too-narrow-${i}`,
+        severity: "alarm",
+        text: `Переклейка ${i + 1}: из панели ${panel.face.wMm} мм выйдет ${available} полос по ${level.cut.sliceWidthMm} мм, а нужно ${level.pieceCount}. Возьмите полосу уже или добавьте ламелей.`,
+        source: "ширина панели ÷ (полоса + пропил)",
+      });
+    }
   }
 
   const thinLamella = r.lamellas.find((l) => l.widthMm < MIN_LAMELLA_MM);
@@ -115,24 +140,35 @@ export function collectWarnings(r: Recipe, face: Face): Warning[] {
 /** Собрать доску и её предупреждения за один проход. */
 export function evaluate(r: Recipe): {
   face: Face | null;
+  project: Project | null;
   error: string | null;
   warnings: Warning[];
 } {
   try {
-    const face = simulate(buildProject(r));
-    return { face, error: null, warnings: collectWarnings(r, face) };
+    const project = buildProject(r);
+    const face = simulate(project);
+    return {
+      face,
+      project,
+      error: null,
+      warnings: collectWarnings(r, face, project),
+    };
   } catch (e) {
     // Отказ модели — это сообщение столяру, а не код ошибки (#D-09).
     return {
       face: null,
+      project: null,
       error: e instanceof Error ? e.message : String(e),
       warnings: [],
     };
   }
 }
 
-export const boardDimensions = (r: Recipe) => ({
-  wMm: boardWidth(r),
-  lMm: rowCount(r) * r.lamellaThicknessMm,
-  hMm: r.boardHMm,
-});
+export const boardDimensions = (r: Recipe) => {
+  const project = buildProject(r);
+  return {
+    wMm: project.boardWMm,
+    lMm: project.boardLMm,
+    hMm: project.boardHMm,
+  };
+};
