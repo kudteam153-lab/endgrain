@@ -50,3 +50,30 @@
 .assembly-svg__used {
   fill: var(--accent-soft);
 }
+
+/* --- Карта заправки (#D-22) -------------------------------------------------
+ * Верхняя лента — из чего склеен щит, правая — счёт ломтей, середина — доска.
+ */
+
+.assembly-svg__map-cell {
+  stroke: var(--seam);
+  stroke-opacity: 0.3;
+  stroke-width: 0.2;
+}
+
+.assembly-svg__map-frame {
+  fill: none;
+  stroke: var(--ink);
+}
+
+.assembly-svg__map-slice {
+  fill: var(--ink);
+  stroke: var(--ink-3);
+}
+
+.assembly-svg__map-rule {
+  fill: var(--ink-2);
+  font-family: var(--font-mono);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}

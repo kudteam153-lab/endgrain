@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!--
+    Знак вкладки — та же печать, что в шапке и на листе: блок из реек и рез
+    поперёк. Цвета зашиты, а не взяты токенами: файл читает браузер, а не
+    страница, и CSS-переменных здесь нет.
+  -->
+  <rect width="32" height="32" fill="#ede8db" />
+  <rect
+    x="2.5"
+    y="2.5"
+    width="27"
+    height="27"
+    fill="none"
+    stroke="#b23a22"
+    stroke-width="2.5"
+  />
+  <g fill="#b23a22">
+    <rect x="7" y="7" width="3.4" height="18" />
+    <rect x="12.1" y="7" width="3.4" height="18" opacity="0.45" />
+    <rect x="17.2" y="7" width="3.4" height="18" />
+    <rect x="22.3" y="7" width="3.4" height="18" opacity="0.45" />
+  </g>
+  <line
+    x1="5"
+    y1="20"
+    x2="27"
+    y2="20"
+    stroke="#ede8db"
+    stroke-width="2.4"
+    stroke-dasharray="3.4 2.4"
+  />
+</svg>
