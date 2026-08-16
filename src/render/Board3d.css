@@ -1,0 +1,22 @@
+/*
+ * Объём. Тот же кульман, но без бумаги: здесь доска, а не документ, поэтому
+ * ни рамки листа, ни миллиметровки — только предмет на столе.
+ */
+
+.board-3d {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.board-3d:active {
+  cursor: grabbing;
+}
+
+.board-3d canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

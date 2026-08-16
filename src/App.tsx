@@ -15,6 +15,7 @@ import {
 import { Controls } from "./ui/Controls.tsx";
 import { CutSheet } from "./ui/CutSheet.tsx";
 import { Gallery } from "./ui/Gallery.tsx";
+import { VolumeOverlay } from "./ui/VolumeOverlay.tsx";
 import { shareUrl } from "./state/share.ts";
 import { useFavourites } from "./state/useFavourites.ts";
 import { useRecipe } from "./state/useRecipe.ts";
@@ -50,6 +51,8 @@ export function App() {
   const assemblyRef = useRef<SVGSVGElement>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [volume, setVolume] = useState(false);
+  const [family, setFamily] = useState<Recipe | null>(null);
   const boxAspect = useBoxAspect(plateRef, 1.4, pdfBusy);
 
   const { face, project, error, warnings } = useMemo(
@@ -105,6 +108,7 @@ export function App() {
     (variant: Recipe) => {
       setRecipe(variant);
       setGalleryFrom(null);
+      setFamily(null);
       replay();
     },
     [setRecipe, replay],
@@ -306,6 +310,14 @@ export function App() {
             <button
               type="button"
               className="btn"
+              onClick={() => setVolume(true)}
+              disabled={!face}
+            >
+              В объёме
+            </button>
+            <button
+              type="button"
+              className="btn"
               onClick={handlePdf}
               disabled={pdfBusy}
             >
@@ -426,15 +438,29 @@ export function App() {
         </section>
       </main>
 
+      {volume && face && (
+        <VolumeOverlay
+          face={face}
+          thicknessMm={recipe.boardHMm}
+          title={`${patternName}, seed ${recipe.seed}`}
+          onClose={() => setVolume(false)}
+        />
+      )}
+
       {galleryFrom !== null && (
         <Gallery
           base={recipe}
           startSeed={galleryFrom}
           favourites={favourites.seeds}
+          family={family}
           onPick={openVariant}
           onToggleFavourite={favourites.toggle}
+          onFamily={setFamily}
           onMore={() => setGalleryFrom((from) => (from ?? recipe.seed) + 12)}
-          onClose={() => setGalleryFrom(null)}
+          onClose={() => {
+            setGalleryFrom(null);
+            setFamily(null);
+          }}
         />
       )}
     </div>

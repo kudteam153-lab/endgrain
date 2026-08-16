@@ -137,3 +137,20 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* «Похожие» — тихая ссылка рядом со звездой: действие второго ряда. */
+.gallery__kin {
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--ink-2);
+  background: transparent;
+  border: 0;
+  border-bottom: var(--hairline) solid var(--rule);
+  cursor: pointer;
+}
+
+.gallery__kin:hover {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}

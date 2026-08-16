@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
+import { crossbreed, mutateMany } from "../core/evolve.ts";
 import { generateGallery, generateRecipe } from "../core/generate.ts";
 import { PATTERNS } from "../core/recipe.ts";
 import type { Recipe } from "../core/recipe.ts";
@@ -20,8 +21,11 @@ interface Props {
   base: Recipe;
   startSeed: number;
   favourites: number[];
+  /** Задан — показываем родню этой доски, а не двенадцать новых. */
+  family: Recipe | null;
   onPick: (recipe: Recipe) => void;
   onToggleFavourite: (seed: number) => void;
+  onFamily: (recipe: Recipe | null) => void;
   onMore: () => void;
   onClose: () => void;
 }
@@ -30,16 +34,21 @@ export function Gallery({
   base,
   startSeed,
   favourites,
+  family,
   onPick,
   onToggleFavourite,
+  onFamily,
   onMore,
   onClose,
 }: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
   const variants = useMemo(
-    () => generateGallery(startSeed, base),
-    [startSeed, base],
+    () =>
+      family
+        ? mutateMany(family, startSeed)
+        : generateGallery(startSeed, base),
+    [family, startSeed, base],
   );
 
   const saved = useMemo(
@@ -64,11 +73,31 @@ export function Gallery({
       aria-label="Варианты узора"
     >
       <div className="gallery__bar">
-        <h2 className="label">Варианты</h2>
+        <h2 className="label">{family ? "Родня" : "Варианты"}</h2>
         <p className="gallery__hint">
-          Размеры доски, пропил и заготовка — ваши. Меняется только узор.
+          {family
+            ? "Тот же узор, сдвинутый в одном месте. Размеры доски прежние."
+            : "Размеры доски, пропил и заготовка — ваши. Меняется только узор."}
         </p>
         <div className="stage__spacer" />
+        {family && (
+          <button
+            type="button"
+            className="btn"
+            onClick={() => onFamily(null)}
+          >
+            Назад к вариантам
+          </button>
+        )}
+        {saved.length >= 2 && !family && (
+          <button
+            type="button"
+            className="btn"
+            onClick={() => onPick(crossbreed(saved[0]!, saved[1]!, startSeed))}
+          >
+            Скрестить отложенные
+          </button>
+        )}
         <button type="button" className="btn btn--accent" onClick={onMore}>
           Ещё двенадцать
         </button>
@@ -89,6 +118,7 @@ export function Gallery({
                   saved
                   onPick={onPick}
                   onToggleFavourite={onToggleFavourite}
+                  onFamily={onFamily}
                 />
               ))}
             </ul>
@@ -96,7 +126,7 @@ export function Gallery({
         )}
 
         <section className="gallery__section">
-          <h3 className="label">Сгенерировано</h3>
+          <h3 className="label">{family ? "Похожие" : "Сгенерировано"}</h3>
           <ul className="gallery__grid">
             {variants.map((recipe) => (
               <Variant
@@ -105,6 +135,7 @@ export function Gallery({
                 saved={favourites.includes(recipe.seed)}
                 onPick={onPick}
                 onToggleFavourite={onToggleFavourite}
+                onFamily={onFamily}
               />
             ))}
           </ul>
@@ -119,9 +150,16 @@ interface VariantProps {
   saved: boolean;
   onPick: (recipe: Recipe) => void;
   onToggleFavourite: (seed: number) => void;
+  onFamily: (recipe: Recipe) => void;
 }
 
-function Variant({ recipe, saved, onPick, onToggleFavourite }: VariantProps) {
+function Variant({
+  recipe,
+  saved,
+  onPick,
+  onToggleFavourite,
+  onFamily,
+}: VariantProps) {
   const { face } = useMemo(() => evaluate(recipe), [recipe]);
   const patternName =
     PATTERNS.find((p) => p.id === recipe.pattern)?.name ?? recipe.pattern;
@@ -148,6 +186,15 @@ function Variant({ recipe, saved, onPick, onToggleFavourite }: VariantProps) {
           {patternName}
           {depth > 0 && ` · ${depth === 1 ? "переклейка" : "две переклейки"}`}
         </span>
+        <button
+          type="button"
+          className="gallery__kin"
+          title="Показать похожие узоры"
+          aria-label={`Похожие на вариант ${recipe.seed}`}
+          onClick={() => onFamily(recipe)}
+        >
+          похожие
+        </button>
         <button
           type="button"
           className="gallery__save"
