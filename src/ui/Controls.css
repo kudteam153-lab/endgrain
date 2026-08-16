@@ -23,9 +23,12 @@
   border-bottom: 0;
 }
 
+/* Объясняющая фраза — антиквой: это рассказ о том, что происходит на
+   верстаке, а не подпись к ручке (#D-22). */
 .controls__aside,
 .controls__note {
   margin: 0;
+  font-family: var(--font-serif);
   font-size: var(--text-sm);
   line-height: var(--leading-snug);
   color: var(--ink-2);

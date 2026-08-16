@@ -92,6 +92,7 @@
 
 .masthead__sub {
   max-width: 68ch;
+  font-family: var(--font-serif);
   font-size: var(--text-sm);
   line-height: var(--leading-snug);
   color: var(--ink-2);
