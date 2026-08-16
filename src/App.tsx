@@ -238,14 +238,16 @@ export function App() {
                 <rect x="13" y="1" width="4" height="22" />
                 <rect x="19" y="1" width="4" height="22" opacity="0.45" />
               </g>
+              {/* Рез рисуется цветом бумаги: он рассекает рейки, а не лежит
+                  поверх них. Тем же приёмом сделана печать на листе. */}
               <line
+                className="masthead__seal-cut"
                 x1="0"
                 y1="15.5"
                 x2="24"
                 y2="15.5"
-                stroke="currentColor"
                 strokeWidth="2"
-                strokeDasharray="3 2"
+                strokeDasharray="2.6 1.9"
               />
             </svg>
           </div>

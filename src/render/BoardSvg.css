@@ -219,3 +219,21 @@
 .board-svg__row:nth-child(n + 31) {
   animation-delay: calc(30 * var(--stagger));
 }
+
+/* --- Печать (#D-22) ---------------------------------------------------------
+ * Красная тушь появляется на листе ровно здесь. Второго красного на чертеже
+ * нет: предупреждения живут под листом, а не на нём.
+ */
+
+.board-svg__seal-frame {
+  fill: none;
+  stroke: var(--seal);
+}
+
+.board-svg__seal-bar {
+  fill: var(--seal);
+}
+
+.board-svg__seal-cut {
+  stroke: var(--sheet);
+}

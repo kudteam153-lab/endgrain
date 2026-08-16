@@ -65,6 +65,10 @@
   height: 100%;
 }
 
+.masthead__seal-cut {
+  stroke: var(--table);
+}
+
 .masthead__words {
   display: flex;
   flex-direction: column;

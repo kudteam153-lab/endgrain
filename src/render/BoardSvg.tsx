@@ -291,22 +291,36 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
       )}
 
       {isWide ? (
-        <StampColumn
-          x={face.wMm + wide.gapX}
-          y={Math.max(0, face.hMm - wide.stampH)}
-          width={wide.stampW}
-          rowH={wide.stampRowH}
-          fields={fields}
-          u={u}
-        />
+        <>
+          <StampColumn
+            x={face.wMm + wide.gapX}
+            y={Math.max(0, face.hMm - wide.stampH)}
+            width={wide.stampW}
+            rowH={wide.stampRowH}
+            fields={fields}
+            u={u}
+          />
+          <Seal
+            x={face.wMm + wide.gapX}
+            y={Math.max(0, face.hMm - wide.stampH) - 3 * u - 11 * u}
+            size={11 * u}
+          />
+        </>
       ) : (
-        <StampBar
-          width={face.wMm}
-          y={face.hMm + tickZone + 3 * u}
-          rowH={tall.stampRowH}
-          fields={fields}
-          u={u}
-        />
+        <>
+          <StampBar
+            width={face.wMm}
+            y={face.hMm + tickZone + 3 * u}
+            rowH={tall.stampRowH}
+            fields={fields}
+            u={u}
+          />
+          <Seal
+            x={face.wMm + 3 * u}
+            y={face.hMm + tickZone + 3 * u}
+            size={11 * u}
+          />
+        </>
       )}
 
       <defs>
@@ -325,6 +339,51 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
     </svg>
   );
 });
+
+/**
+ * Печать (`#D-22`). Стоит внутри SVG, а не в вёрстке рядом: выгруженная
+ * картинка и страница PDF должны остаться подписанным документом, а не
+ * обрезком чертежа. Тот же знак, что в шапке, — блок из реек и рез поперёк.
+ * Иероглиф на его месте был бы декорацией.
+ */
+function Seal({ x, y, size }: { x: number; y: number; size: number }) {
+  const pad = size * 0.16;
+  const inner = size - pad * 2;
+  const barW = inner / 7;
+  const bars = [0, 2, 4, 6].map((i) => x + pad + i * barW);
+  return (
+    <g className="board-svg__seal" transform={`rotate(-2 ${x} ${y + size})`}>
+      <rect
+        className="board-svg__seal-frame"
+        x={x}
+        y={y}
+        width={size}
+        height={size}
+        strokeWidth={size * 0.075}
+      />
+      {bars.map((bx, i) => (
+        <rect
+          key={i}
+          className="board-svg__seal-bar"
+          x={bx}
+          y={y + pad}
+          width={barW}
+          height={inner}
+          opacity={i % 2 === 0 ? 1 : 0.45}
+        />
+      ))}
+      <line
+        className="board-svg__seal-cut"
+        x1={x}
+        y1={y + size * 0.66}
+        x2={x + size}
+        y2={y + size * 0.66}
+        strokeWidth={size * 0.075}
+        strokeDasharray={`${size * 0.11} ${size * 0.075}`}
+      />
+    </g>
+  );
+}
 
 type Field = [string, string];
 
