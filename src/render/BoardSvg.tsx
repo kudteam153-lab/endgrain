@@ -92,11 +92,7 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
   const padLeft = 4 * u;
   const tickZone = 10 * u;
 
-  /**
-   * Зона бруска над чертежом и зона печати под ним. Обе описаны здесь, а не
-   * в раскладках: они одинаковы и для альбомного листа, и для портретного —
-   * меняется только то, куда встаёт штамп.
-   */
+  /** Брусок над чертежом: одинаково для альбомного листа и для портретного. */
   const billetW = billetStrips.reduce(
     (sum, s) => sum + Math.max(1, s.widthMm),
     0,
@@ -111,8 +107,9 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
    */
   const headZone =
     billetStrips.length > 0 ? billetFront + billetDy + 14 * u : 0;
-  const sealSize = 11 * u;
-  const footZone = sealSize + 4 * u;
+  // Печать сняли с листа: на документе она спорила со штампом, а подписью
+  // служит именно штамп. Знак остался в шапке и на вкладке (#D-22).
+  const footZone = 0;
 
   /** Ячейки по рядам — ряд это одна плашка, и укладывается он целиком. */
   const rows = useMemo(() => {
@@ -337,32 +334,22 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
       )}
 
       {isWide ? (
-        <>
-          <StampColumn
+        <StampColumn
             x={face.wMm + wide.gapX}
             y={Math.max(0, face.hMm - wide.stampH)}
             width={wide.stampW}
             rowH={wide.stampRowH}
-            fields={fields}
-            u={u}
-          />
-          <Seal x={0} y={face.hMm + tickZone + 2 * u} size={sealSize} />
-        </>
+          fields={fields}
+          u={u}
+        />
       ) : (
-        <>
-          <StampBar
+        <StampBar
             width={face.wMm}
             y={face.hMm + tickZone + 3 * u}
-            rowH={tall.stampRowH}
-            fields={fields}
-            u={u}
-          />
-          <Seal
-            x={0}
-            y={face.hMm + tickZone + 3 * u + tall.stampH + 2 * u}
-            size={sealSize}
-          />
-        </>
+          rowH={tall.stampRowH}
+          fields={fields}
+          u={u}
+        />
       )}
 
       <defs>
@@ -457,51 +444,6 @@ function Billet({ strips, bottom, front, dx, dy, u }: BilletProps) {
         y2={bottom + 1.5 * u}
         strokeWidth={0.55 * u}
         strokeDasharray={`${2 * u} ${1.4 * u}`}
-      />
-    </g>
-  );
-}
-
-/**
- * Печать (`#D-22`). Стоит внутри SVG, а не в вёрстке рядом: выгруженная
- * картинка и страница PDF должны остаться подписанным документом, а не
- * обрезком чертежа. Тот же знак, что в шапке, — блок из реек и рез поперёк.
- * Иероглиф на его месте был бы декорацией.
- */
-function Seal({ x, y, size }: { x: number; y: number; size: number }) {
-  const pad = size * 0.16;
-  const inner = size - pad * 2;
-  const barW = inner / 7;
-  const bars = [0, 2, 4, 6].map((i) => x + pad + i * barW);
-  return (
-    <g className="board-svg__seal" transform={`rotate(-2 ${x} ${y + size})`}>
-      <rect
-        className="board-svg__seal-frame"
-        x={x}
-        y={y}
-        width={size}
-        height={size}
-        strokeWidth={size * 0.075}
-      />
-      {bars.map((bx, i) => (
-        <rect
-          key={i}
-          className="board-svg__seal-bar"
-          x={bx}
-          y={y + pad}
-          width={barW}
-          height={inner}
-          opacity={i % 2 === 0 ? 1 : 0.45}
-        />
-      ))}
-      <line
-        className="board-svg__seal-cut"
-        x1={x}
-        y1={y + size * 0.66}
-        x2={x + size}
-        y2={y + size * 0.66}
-        strokeWidth={size * 0.075}
-        strokeDasharray={`${size * 0.11} ${size * 0.075}`}
       />
     </g>
   );

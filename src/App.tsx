@@ -30,6 +30,7 @@ import type { ViewId } from "./render/views.ts";
 import { shareUrl } from "./state/share.ts";
 import { useFavourites } from "./state/useFavourites.ts";
 import { useRecipe } from "./state/useRecipe.ts";
+import { THEMES, useTheme } from "./state/useTheme.ts";
 import { useBoxAspect } from "./render/useBoxAspect.ts";
 import "./App.css";
 
@@ -58,6 +59,7 @@ export function App() {
   const { recipe, setRecipe, patch, reset, toJson, fromJson, importError } =
     useRecipe();
   const favourites = useFavourites();
+  const { theme, setTheme } = useTheme();
   const svgRef = useRef<SVGSVGElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const plateRef = useRef<HTMLDivElement>(null);
@@ -246,7 +248,8 @@ export function App() {
             узор. Иероглиф на его месте был бы декорацией: чужая письменность
             в логотипе ничего не объясняет про доску.
           */}
-          <div className="masthead__seal" aria-hidden="true">
+          <div className="masthead__lockup">
+            <div className="masthead__seal" aria-hidden="true">
             <svg viewBox="0 0 24 24">
               <g fill="currentColor">
                 <rect x="1" y="1" width="4" height="22" />
@@ -265,17 +268,17 @@ export function App() {
                 strokeWidth="2"
                 strokeDasharray="2.6 1.9"
               />
-            </svg>
+              </svg>
+            </div>
+
+            <h1 className="masthead__title">Tanegi</h1>
+            <span className="masthead__bench">Bench</span>
           </div>
 
-          <div className="masthead__words">
-            <h1 className="masthead__title">Tanegi</h1>
-            <p className="masthead__bench">Bench</p>
-            <p className="masthead__sub">
-              Рейки складывают в блок, блок режут поперёк — узор проявляется на
-              торце. Что нельзя изготовить, здесь не рисуется.
-            </p>
-          </div>
+          <p className="masthead__sub">
+            Рейки складывают в блок, блок режут поперёк — узор проявляется на
+            торце. Что нельзя изготовить, здесь не рисуется.
+          </p>
         </div>
 
         <dl className="masthead__meta">
@@ -300,6 +303,25 @@ export function App() {
             </dd>
           </div>
         </dl>
+
+        {/*
+          Переключатель темы. До него человек с тёмной ОС ни разу не видел
+          бумагу васи — то есть систему, ради которой всё и делалось.
+        */}
+        <div className="seg" role="radiogroup" aria-label="Тема">
+          {THEMES.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="radio"
+              aria-checked={theme === t.id}
+              className="seg__item"
+              onClick={() => setTheme(t.id)}
+            >
+              {t.name}
+            </button>
+          ))}
+        </div>
       </header>
 
       <main className="app__main">

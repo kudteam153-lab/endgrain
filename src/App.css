@@ -36,11 +36,22 @@
   border-bottom: var(--frame) solid var(--rule-strong);
 }
 
+/*
+ * Знак и имя в одну строку: печать, TANEGI, BENCH — лежат на одной линии,
+ * подпись уходит второй строкой. Шапка ест высоту, которой нет (#D-13), и
+ * двухэтажный логотип отнимал её у чертежа.
+ */
 .masthead__mark {
   display: flex;
-  align-items: center;
-  gap: var(--s-4);
+  flex-direction: column;
+  gap: var(--s-2);
   min-width: 0;
+}
+
+.masthead__lockup {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
 }
 
 /*
@@ -69,18 +80,11 @@
   stroke: var(--table);
 }
 
-.masthead__words {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-1);
-  min-width: 0;
-}
-
 .masthead__title {
   font-family: var(--font-display);
-  font-size: var(--text-3xl);
+  font-size: var(--text-xl);
   font-weight: 700;
-  line-height: 0.86;
+  line-height: 1;
   letter-spacing: var(--tracking-display);
   text-transform: uppercase;
 }
