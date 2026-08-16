@@ -13,6 +13,9 @@ import {
 } from "three";
 import { speciesById } from "../core/species.ts";
 import type { Face } from "../core/types.ts";
+import { cameraAxis, fitDistance } from "./fit.ts";
+import { VIEWS } from "./views.ts";
+import type { ViewId } from "./views.ts";
 import "./Board3d.css";
 
 /**
@@ -29,16 +32,32 @@ import "./Board3d.css";
  * ровно там, где жюри крутит доску мышью.
  */
 
-interface Props {
-  face: Face;
-  thicknessMm: number;
-}
+/**
+ * Наклон ограничен почти-полюсами. На самом полюсе камера смотрит вдоль своей
+ * же оси «вверх», и картинка срывается в неуправляемый переворот. Снизу обзор
+ * оставлен намеренно: тыльная сторона доски — тоже торец, и мастер имеет право
+ * посмотреть, что там за узор.
+ */
+const PITCH_LIMIT = 1.53;
 
 /** Матовое дерево: блик по всей плоскости выглядит пластиком, а не доской. */
 const MATERIAL = new MeshLambertMaterial({ vertexColors: false });
 
-export function Board3d({ face, thicknessMm }: Props) {
+interface Props {
+  face: Face;
+  thicknessMm: number;
+  view: ViewId;
+}
+
+export function Board3d({ face, thicknessMm, view }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Мост из React в сцену. Сцена живёт в замыкании эффекта и пересобирается
+   * только при смене доски; смена вида не должна ронять и собирать её заново —
+   * это лишние полсекунды и потерянный угол поворота.
+   */
+  const applyView = useRef<((id: ViewId) => void) | null>(null);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -47,7 +66,8 @@ export function Board3d({ face, thicknessMm }: Props) {
     const scene = new Scene();
     scene.background = new Color(readToken("--table", "#e8e8e4"));
 
-    const camera = new PerspectiveCamera(38, 1, 1, 5000);
+    const FOV = 38;
+    const camera = new PerspectiveCamera(FOV, 1, 1, 5000);
     const renderer = new WebGLRenderer({ antialias: true, alpha: false });
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
     host.append(renderer.domElement);
@@ -84,22 +104,29 @@ export function Board3d({ face, thicknessMm }: Props) {
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     scene.add(mesh);
 
-    // Камера смотрит на доску сверху-сбоку — так видно и узор, и толщину.
-    const span = Math.max(face.wMm, face.hMm);
-    let angle = -0.5;
+    /** Полугабариты детали. Постановка камеры считается по ним (`fit.ts`). */
+    const half = {
+      x: face.wMm / 2,
+      y: Math.max(thicknessMm, 1) / 2,
+      z: face.hMm / 2,
+    };
+
+    let yaw: number = VIEWS[0].yaw;
+    let pitch: number = VIEWS[0].pitch;
     let dragging = false;
     let lastX = 0;
+    let lastY = 0;
 
     const place = () => {
-      // Расстояние от длинной стороны доски, а не фиксированное: маленькая
-      // доска не должна теряться в кадре, большая — вылезать за него.
-      const distance = span * 1.25;
-      camera.position.set(
-        Math.sin(angle) * distance,
-        distance * 0.62,
-        Math.cos(angle) * distance,
-      );
+      const distance = fitDistance(half, camera.aspect, yaw, pitch, FOV);
+      const [ax, ay, az] = cameraAxis(yaw, pitch);
+      camera.position.set(ax * distance, ay * distance, az * distance);
       camera.lookAt(0, 0, 0);
+    };
+
+    const draw = () => {
+      place();
+      renderer.render(scene, camera);
     };
 
     const resize = () => {
@@ -108,26 +135,42 @@ export function Board3d({ face, thicknessMm }: Props) {
       renderer.setSize(box.width, box.height, false);
       camera.aspect = box.width / box.height;
       camera.updateProjectionMatrix();
-      place();
-      renderer.render(scene, camera);
+      draw();
     };
 
     const observer = new ResizeObserver(resize);
     observer.observe(host);
     resize();
 
-    /** Вращение мышью и пальцем. Своё, а не OrbitControls: нужна одна ось. */
+    applyView.current = (id) => {
+      const preset = VIEWS.find((v) => v.id === id) ?? VIEWS[0];
+      yaw = preset.yaw;
+      pitch = preset.pitch;
+      draw();
+    };
+
+    /**
+     * Вращение мышью и пальцем по двум осям. Своё, а не OrbitControls: нужны
+     * поворот и наклон вокруг центра детали, без панорамирования и зума —
+     * увести деталь из кадра здесь нечем, и это сделано намеренно.
+     */
     const onDown = (e: PointerEvent) => {
       dragging = true;
       lastX = e.clientX;
+      lastY = e.clientY;
       host.setPointerCapture(e.pointerId);
     };
     const onMove = (e: PointerEvent) => {
       if (!dragging) return;
-      angle -= (e.clientX - lastX) * 0.01;
+      yaw -= (e.clientX - lastX) * 0.01;
+      pitch = clamp(
+        pitch + (e.clientY - lastY) * 0.01,
+        -PITCH_LIMIT,
+        PITCH_LIMIT,
+      );
       lastX = e.clientX;
-      place();
-      renderer.render(scene, camera);
+      lastY = e.clientY;
+      draw();
     };
     const onUp = (e: PointerEvent) => {
       dragging = false;
@@ -140,6 +183,7 @@ export function Board3d({ face, thicknessMm }: Props) {
     host.addEventListener("pointercancel", onUp);
 
     return () => {
+      applyView.current = null;
       observer.disconnect();
       host.removeEventListener("pointerdown", onDown);
       host.removeEventListener("pointermove", onMove);
@@ -152,14 +196,22 @@ export function Board3d({ face, thicknessMm }: Props) {
     };
   }, [face, thicknessMm]);
 
+  useEffect(() => {
+    applyView.current?.(view);
+  }, [view]);
+
   return (
     <div
       ref={hostRef}
       className="board-3d"
       role="img"
-      aria-label="Доска в объёме, вращается перетаскиванием"
+      aria-label="Доска в объёме, поворачивается перетаскиванием"
     />
   );
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }
 
 /** Цвет из токена дизайн-системы: three.js про CSS-переменные не знает. */

@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { generateRecipe } from "./core/generate.ts";
 import { PATTERNS } from "./core/recipe.ts";
 import type { Recipe } from "./core/recipe.ts";
@@ -15,7 +23,8 @@ import {
 import { Controls } from "./ui/Controls.tsx";
 import { CutSheet } from "./ui/CutSheet.tsx";
 import { Gallery } from "./ui/Gallery.tsx";
-import { VolumeOverlay } from "./ui/VolumeOverlay.tsx";
+import { VIEWS } from "./render/views.ts";
+import type { ViewId } from "./render/views.ts";
 import { shareUrl } from "./state/share.ts";
 import { useFavourites } from "./state/useFavourites.ts";
 import { useRecipe } from "./state/useRecipe.ts";
@@ -34,6 +43,15 @@ function plateClass(active: boolean, exporting: boolean): string {
   return active ? "plate" : "plate plate--offscreen";
 }
 
+/**
+ * three.js грузится по нажатию «3D», а не при открытии страницы: он весит
+ * больше всего остального приложения вместе взятого, а нужен одному режиму из
+ * двух. Первый экран важнее — та же причина, что у PDF в `#D-18`.
+ */
+const Board3d = lazy(() =>
+  import("./render/Board3d.tsx").then((m) => ({ default: m.Board3d })),
+);
+
 export function App() {
   const { recipe, setRecipe, patch, reset, toJson, fromJson, importError } =
     useRecipe();
@@ -51,7 +69,8 @@ export function App() {
   const assemblyRef = useRef<SVGSVGElement>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [volume, setVolume] = useState(false);
+  const [solid, setSolid] = useState(false);
+  const [view, setView] = useState<ViewId>("iso");
   const [family, setFamily] = useState<Recipe | null>(null);
   const boxAspect = useBoxAspect(plateRef, 1.4, pdfBusy);
 
@@ -116,6 +135,14 @@ export function App() {
   useEffect(() => {
     replay();
   }, [recipe.pattern, replay]);
+
+  /**
+   * Объём существует только на экране. На время сборки PDF он снимается: в
+   * документ уходит чертёж с размерами, а не снимок canvas — растрировать
+   * повёрнутую деталь вместо листа значило бы отдать мастеру картинку вместо
+   * инструкции.
+   */
+  const showSolid = solid && !pdfBusy;
 
   const filename = `doska-${project?.boardWMm ?? 0}x${project?.boardLMm ?? 0}`;
 
@@ -310,14 +337,6 @@ export function App() {
             <button
               type="button"
               className="btn"
-              onClick={() => setVolume(true)}
-              disabled={!face}
-            >
-              В объёме
-            </button>
-            <button
-              type="button"
-              className="btn"
               onClick={handlePdf}
               disabled={pdfBusy}
             >
@@ -369,21 +388,112 @@ export function App() {
             переключить перед печатью.
           */}
           <div
-            className={sheet === "drawing" ? "plate" : "plate plate--offscreen"}
+            className={`${
+              sheet === "drawing" ? "plate" : "plate plate--offscreen"
+            }${showSolid ? " plate--solid" : ""}`}
             ref={plateRef}
           >
             {face ? (
-              <BoardSvg
-                ref={svgRef}
-                face={face}
-                thicknessMm={recipe.boardHMm}
-                lamellaWidths={lamellaWidths}
-                patternName={patternName}
-                kerfMm={recipe.kerfMm}
-                seed={recipe.seed}
-                boxAspect={boxAspect}
-                assemblyKey={assemblyKey}
-              />
+              <>
+                {/*
+                  Чертёж остаётся смонтированным и в объёмном режиме: из него
+                  собирается PDF и он же уходит на бумагу. Показ снимается
+                  классом, а не размонтированием — `svgRef` должен оставаться
+                  живым, иначе кнопка PDF в 3D печатала бы пустую страницу.
+                */}
+                <div
+                  className={
+                    showSolid ? "plate__flat plate__flat--off" : "plate__flat"
+                  }
+                >
+                  <BoardSvg
+                    ref={svgRef}
+                    face={face}
+                    thicknessMm={recipe.boardHMm}
+                    lamellaWidths={lamellaWidths}
+                    patternName={patternName}
+                    kerfMm={recipe.kerfMm}
+                    seed={recipe.seed}
+                    boxAspect={boxAspect}
+                    assemblyKey={assemblyKey}
+                  />
+                </div>
+
+                {showSolid && (
+                  <div className="plate__solid">
+                    <Suspense
+                      fallback={
+                        <p className="plate__loading label">
+                          Собираю доску в объёме…
+                        </p>
+                      }
+                    >
+                      <Board3d
+                        face={face}
+                        thicknessMm={recipe.boardHMm}
+                        view={view}
+                      />
+                    </Suspense>
+                  </div>
+                )}
+
+                {/*
+                  Переключатель живёт на самом листе, а не в панели действий:
+                  мастер переключает представление по ходу правки размеров, и
+                  ходить за этим наверх — лишний путь. В экспорт он не попадает
+                  (`pdfBusy`) и не печатается: это орган управления, а не часть
+                  документа.
+                */}
+                {!pdfBusy && (
+                  <div className="plate__controls">
+                    <div
+                      className="seg"
+                      role="radiogroup"
+                      aria-label="Представление листа"
+                    >
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={!showSolid}
+                        className="seg__item"
+                        onClick={() => setSolid(false)}
+                      >
+                        2D
+                      </button>
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={showSolid}
+                        className="seg__item"
+                        onClick={() => setSolid(true)}
+                      >
+                        3D
+                      </button>
+                    </div>
+
+                    {showSolid && (
+                      <div
+                        className="seg seg--stack"
+                        role="radiogroup"
+                        aria-label="Вид детали"
+                      >
+                        {VIEWS.map((v) => (
+                          <button
+                            key={v.id}
+                            type="button"
+                            role="radio"
+                            aria-checked={view === v.id}
+                            className="seg__item"
+                            onClick={() => setView(v.id)}
+                          >
+                            {v.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             ) : (
               <div className="plate__blocked">
                 <p className="label">Так доска не собирается</p>
@@ -437,15 +547,6 @@ export function App() {
           )}
         </section>
       </main>
-
-      {volume && face && (
-        <VolumeOverlay
-          face={face}
-          thicknessMm={recipe.boardHMm}
-          title={`${patternName}, seed ${recipe.seed}`}
-          onClose={() => setVolume(false)}
-        />
-      )}
 
       {galleryFrom !== null && (
         <Gallery
