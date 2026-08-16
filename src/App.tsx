@@ -225,11 +225,39 @@ export function App() {
     <div className="app">
       <header className="masthead">
         <div className="masthead__mark">
-          <h1 className="masthead__title">Торцевая доска</h1>
-          <p className="masthead__sub">
-            Узор собирается как на верстаке — склейка, рез, переклейка. Что
-            нельзя изготовить, здесь не рисуется.
-          </p>
+          {/*
+            Печать: блок из четырёх реек и рез поперёк — то, из чего берётся
+            узор. Иероглиф на его месте был бы декорацией: чужая письменность
+            в логотипе ничего не объясняет про доску.
+          */}
+          <div className="masthead__seal" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <g fill="currentColor">
+                <rect x="1" y="1" width="4" height="22" />
+                <rect x="7" y="1" width="4" height="22" opacity="0.45" />
+                <rect x="13" y="1" width="4" height="22" />
+                <rect x="19" y="1" width="4" height="22" opacity="0.45" />
+              </g>
+              <line
+                x1="0"
+                y1="15.5"
+                x2="24"
+                y2="15.5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeDasharray="3 2"
+              />
+            </svg>
+          </div>
+
+          <div className="masthead__words">
+            <h1 className="masthead__title">Танэги</h1>
+            <p className="masthead__bench">Верстак</p>
+            <p className="masthead__sub">
+              Рейки складывают в блок, блок режут поперёк — узор проявляется на
+              торце. Что нельзя изготовить, здесь не рисуется.
+            </p>
+          </div>
         </div>
 
         <dl className="masthead__meta">
