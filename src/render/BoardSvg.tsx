@@ -27,6 +27,12 @@ import "./BoardSvg.css";
 interface Props {
   face: Face;
   thicknessMm: number;
+  /**
+   * Рейки первой склейки. Из них рисуется брусок над срезом: лист должен
+   * отвечать на вопрос «откуда узор», а не только «какой он». Ширины
+   * настоящие, поэтому брусок бывает шире доски — после переклейки так и есть.
+   */
+  billetStrips: Array<{ widthMm: number; color: string }>;
   lamellaWidths: number[];
   patternName: string;
   kerfMm: number;
@@ -70,6 +76,7 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
   {
     face,
     thicknessMm,
+    billetStrips,
     lamellaWidths,
     patternName,
     kerfMm,
@@ -84,6 +91,28 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
   const padTop = 13 * u;
   const padLeft = 4 * u;
   const tickZone = 10 * u;
+
+  /**
+   * Зона бруска над чертежом и зона печати под ним. Обе описаны здесь, а не
+   * в раскладках: они одинаковы и для альбомного листа, и для портретного —
+   * меняется только то, куда встаёт штамп.
+   */
+  const billetW = billetStrips.reduce(
+    (sum, s) => sum + Math.max(1, s.widthMm),
+    0,
+  );
+  const billetFront = 12 * u;
+  const billetDx = 16 * u;
+  const billetDy = 9 * u;
+  /**
+   * Зона над чертежом: торец бруска, уход верхней грани вглубь, зазор до
+   * размерной линии и строка подписи с запасом на выносные элементы шрифта.
+   * Считалась впритык — подпись срезало верхним краем листа.
+   */
+  const headZone =
+    billetStrips.length > 0 ? billetFront + billetDy + 14 * u : 0;
+  const sealSize = 11 * u;
+  const footZone = sealSize + 4 * u;
 
   /** Ячейки по рядам — ряд это одна плашка, и укладывается он целиком. */
   const rows = useMemo(() => {
@@ -133,16 +162,22 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
 
   // Две раскладки листа. Берём ту, чьи пропорции ближе к пропорциям бокса, —
   // тогда чертёж занимает бокс целиком, а не летает в пустой бумаге.
+  // Ширина листа считается по самому широкому из двух: доска и брусок. После
+  // переклейки брусок шире доски, и без этого он вылезал бы за край бумаги.
+  const bodyW = Math.max(face.wMm, billetW + billetDx);
+
   const tall = {
     stampRowH: 7 * u,
     get stampH() {
       return this.stampRowH * 3;
     },
     get vbW() {
-      return padLeft + face.wMm + 16 * u;
+      return padLeft + bodyW + 16 * u;
     },
     get vbH() {
-      return padTop + face.hMm + tickZone + 3 * u + this.stampH + 3 * u;
+      return (
+        headZone + padTop + face.hMm + tickZone + 3 * u + this.stampH + footZone
+      );
     },
   };
   const wide = {
@@ -153,10 +188,10 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
       return this.stampRowH * fields.length;
     },
     get vbW() {
-      return padLeft + face.wMm + this.gapX + this.stampW + 4 * u;
+      return padLeft + bodyW + this.gapX + this.stampW + 4 * u;
     },
     get vbH() {
-      return padTop + face.hMm + tickZone + 3 * u;
+      return headZone + padTop + face.hMm + tickZone + footZone;
     },
   };
 
@@ -171,10 +206,21 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
     <svg
       ref={ref}
       className="board-svg"
-      viewBox={`${-padLeft} ${-padTop} ${vb.w} ${vb.h}`}
+      viewBox={`${-padLeft} ${-(padTop + headZone)} ${vb.w} ${vb.h}`}
       role="img"
       aria-label={`Чертёж доски ${fmt(face.wMm)} на ${fmt(face.hMm)} миллиметров, узор «${patternName}»`}
     >
+      {billetStrips.length > 0 && (
+        <Billet
+          strips={billetStrips}
+          bottom={-(padTop + 5 * u)}
+          front={billetFront}
+          dx={billetDx}
+          dy={billetDy}
+          u={u}
+        />
+      )}
+
       <g key={assemblyKey} className="board-svg__rows">
         {rows.map((cells, r) => (
           <g className="board-svg__row" key={r}>
@@ -300,11 +346,7 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
             fields={fields}
             u={u}
           />
-          <Seal
-            x={face.wMm + wide.gapX}
-            y={Math.max(0, face.hMm - wide.stampH) - 3 * u - 11 * u}
-            size={11 * u}
-          />
+          <Seal x={0} y={face.hMm + tickZone + 2 * u} size={sealSize} />
         </>
       ) : (
         <>
@@ -316,9 +358,9 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
             u={u}
           />
           <Seal
-            x={face.wMm + 3 * u}
-            y={face.hMm + tickZone + 3 * u}
-            size={11 * u}
+            x={0}
+            y={face.hMm + tickZone + 3 * u + tall.stampH + 2 * u}
+            size={sealSize}
           />
         </>
       )}
@@ -339,6 +381,86 @@ export const BoardSvg = forwardRef<SVGSVGElement, Props>(function BoardSvg(
     </svg>
   );
 });
+
+interface BilletProps {
+  strips: Array<{ widthMm: number; color: string }>;
+  /** Низ торца бруска в координатах листа. Брусок растёт вверх от него. */
+  bottom: number;
+  front: number;
+  dx: number;
+  dy: number;
+  u: number;
+}
+
+/**
+ * Брусок над срезом (`#D-22`).
+ *
+ * Лист отвечает на вопрос «откуда узор», а не только «какой он»: сверху рейки,
+ * склеенные в брусок, с намеченным поперечным резом, снизу — торец, который из
+ * этого выйдет. Так делают доски, и так делали хаконэ-ёсэги.
+ *
+ * Ширины настоящие, не подогнанные под ширину доски: после переклейки брусок
+ * шире доски, и рисовать его в размер чертежа значило бы соврать в главном.
+ */
+function Billet({ strips, bottom, front, dx, dy, u }: BilletProps) {
+  const top = bottom - front;
+  let x = 0;
+  const bars = strips.map((s, i) => {
+    const w = Math.max(1, s.widthMm);
+    const bar = { key: i, x, w, color: s.color };
+    x += w;
+    return bar;
+  });
+  const total = x;
+  // Рез на трёх четвертях длины: видно и брусок, и то, что от него отделяют.
+  const cut = total * 0.76;
+
+  return (
+    <g className="board-svg__billet">
+      <text
+        className="board-svg__billet-cap"
+        x={0}
+        y={top - dy - 2.5 * u}
+        fontSize={2.9 * u}
+      >
+        БРУСОК · РЕЙКИ СКЛЕЕНЫ, РЕЖЕМ ПОПЕРЁК
+      </text>
+
+      {/* Верхняя грань уходит вглубь: без неё это полосатый прямоугольник, и
+          «поперёк» нечему быть поперёк. */}
+      {bars.map((b) => (
+        <polygon
+          key={`t${b.key}`}
+          className="board-svg__billet-top"
+          points={`${b.x},${top} ${b.x + b.w},${top} ${b.x + b.w + dx},${top - dy} ${b.x + dx},${top - dy}`}
+          fill={b.color}
+        />
+      ))}
+
+      {bars.map((b) => (
+        <rect
+          key={`f${b.key}`}
+          className="board-svg__billet-front"
+          x={b.x}
+          y={top}
+          width={b.w}
+          height={front}
+          fill={b.color}
+        />
+      ))}
+
+      <line
+        className="board-svg__billet-cut"
+        x1={cut + dx}
+        y1={top - dy - 1.5 * u}
+        x2={cut}
+        y2={bottom + 1.5 * u}
+        strokeWidth={0.55 * u}
+        strokeDasharray={`${2 * u} ${1.4 * u}`}
+      />
+    </g>
+  );
+}
 
 /**
  * Печать (`#D-22`). Стоит внутри SVG, а не в вёрстке рядом: выгруженная

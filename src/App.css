@@ -78,8 +78,9 @@
 
 .masthead__title {
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
+  font-size: var(--text-3xl);
   font-weight: 700;
+  line-height: 0.86;
   letter-spacing: var(--tracking-display);
   text-transform: uppercase;
 }
@@ -274,21 +275,10 @@
   display: flex;
   padding: var(--s-4);
   background-color: var(--sheet);
-  /* Бумага васи, а не калька: частая продольная линия (верже) и редкая
-     поперечная (понтюзо) — след формы, на которой отлит лист. Миллиметровка
-     ушла вместе с «Чертежом» (#D-22): она разметка кальки, и под таблицами
-     мешала читать столбцы цифр. */
-  background-image:
-    repeating-linear-gradient(
-      to bottom,
-      var(--grid) 0 var(--hairline),
-      transparent var(--hairline) var(--laid-step)
-    ),
-    repeating-linear-gradient(
-      to right,
-      var(--chain) 0 var(--hairline),
-      transparent var(--hairline) var(--chain-step)
-    );
+  /* Бумага чистая. Миллиметровка ушла вместе с «Чертежом», а верже и понтюзо
+     сняты следом: на листе теперь брусок над срезом, и любая фоновая линейка
+     спорит с его гранями. Лист держится рамкой и офсетной тенью, как в
+     макете. */
   border: var(--hairline) solid var(--rule-strong);
   box-shadow: var(--shadow-plate-sm);
 }
@@ -599,7 +589,8 @@
   }
 
   .plate__solid,
-  .plate__controls {
+  .plate__controls,
+  .layers {
     display: none;
   }
 

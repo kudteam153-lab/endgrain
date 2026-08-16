@@ -9,7 +9,6 @@ import {
 import type { Recipe, Weave, WeaveId } from "../core/recipe.ts";
 import { SPECIES } from "../core/species.ts";
 import { requiredBlankLength, sliceCapacity } from "../core/warnings.ts";
-import { BilletDiagram } from "./BilletDiagram.tsx";
 import "./Controls.css";
 
 /**
@@ -99,8 +98,6 @@ export function Controls({ recipe, patch, onReset }: Props) {
 
       <section className="controls__group">
         <h2 className="label">Ламели первой склейки</h2>
-
-        <BilletDiagram lamellas={recipe.lamellas} kerfMm={recipe.kerfMm} />
 
         <p className="controls__aside">
           Склеиваем <span className="num">{lamellaSpan(recipe)}</span> мм в

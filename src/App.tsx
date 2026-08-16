@@ -10,6 +10,7 @@ import {
 import { generateRecipe } from "./core/generate.ts";
 import { PATTERNS } from "./core/recipe.ts";
 import type { Recipe } from "./core/recipe.ts";
+import { speciesById } from "./core/species.ts";
 import { formatLength } from "./core/units.ts";
 import { evaluate } from "./core/warnings.ts";
 import { BoardSvg } from "./render/BoardSvg.tsx";
@@ -23,6 +24,7 @@ import {
 import { Controls } from "./ui/Controls.tsx";
 import { CutSheet } from "./ui/CutSheet.tsx";
 import { Gallery } from "./ui/Gallery.tsx";
+import { Layers } from "./ui/Layers.tsx";
 import { VIEWS } from "./render/views.ts";
 import type { ViewId } from "./render/views.ts";
 import { shareUrl } from "./state/share.ts";
@@ -86,6 +88,20 @@ export function App() {
    * заметить — в шапке и в имени файла.
    */
   const rows = project?.levels.at(-1)?.pieceCount ?? 0;
+
+  /**
+   * Рейки первой склейки для бруска на листе. В отличие от нумерации ламелей
+   * рисуются всегда: даже когда после переклейки колонки лица набраны уже не
+   * из них, брусок остаётся тем, с чего доска началась.
+   */
+  const billetStrips = useMemo(
+    () =>
+      recipe.lamellas.map((l) => ({
+        widthMm: l.widthMm,
+        color: speciesById(l.speciesId).color,
+      })),
+    [recipe.lamellas],
+  );
 
   /**
    * Нумерация ламелей на чертеже — только для доски без переклеек. После
@@ -253,8 +269,8 @@ export function App() {
           </div>
 
           <div className="masthead__words">
-            <h1 className="masthead__title">Танэги</h1>
-            <p className="masthead__bench">Верстак</p>
+            <h1 className="masthead__title">Tanegi</h1>
+            <p className="masthead__bench">Bench</p>
             <p className="masthead__sub">
               Рейки складывают в блок, блок режут поперёк — узор проявляется на
               торце. Что нельзя изготовить, здесь не рисуется.
@@ -440,6 +456,7 @@ export function App() {
                     ref={svgRef}
                     face={face}
                     thicknessMm={recipe.boardHMm}
+                    billetStrips={billetStrips}
                     lamellaWidths={lamellaWidths}
                     patternName={patternName}
                     kerfMm={recipe.kerfMm}
@@ -474,6 +491,15 @@ export function App() {
                   (`pdfBusy`) и не печатается: это орган управления, а не часть
                   документа.
                 */}
+                {!pdfBusy && !showSolid && (
+                  <Layers
+                    base={recipe}
+                    seeds={favourites.seeds}
+                    current={recipe.seed}
+                    onPick={openVariant}
+                  />
+                )}
+
                 {!pdfBusy && (
                   <div className="plate__controls">
                     <div

@@ -237,3 +237,30 @@
 .board-svg__seal-cut {
   stroke: var(--sheet);
 }
+
+/* --- Брусок над срезом (#D-22) ----------------------------------------------
+ * Лист отвечает «откуда узор», а не только «какой он».
+ */
+
+.board-svg__billet-front,
+.board-svg__billet-top {
+  stroke: var(--seam);
+  stroke-opacity: 0.3;
+  stroke-width: 0.6;
+}
+
+/* Верхняя грань светлее торца: свет падает сверху, как на верстаке. */
+.board-svg__billet-top {
+  opacity: 0.62;
+}
+
+.board-svg__billet-cut {
+  stroke: var(--seal);
+  fill: none;
+}
+
+.board-svg__billet-cap {
+  fill: var(--ink-2);
+  font-family: var(--font-mono);
+  letter-spacing: var(--tracking-label);
+}
