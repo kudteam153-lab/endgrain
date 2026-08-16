@@ -21,11 +21,11 @@
 
 | Пункт                           | Что именно                                                                                                                                              | Статус |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Ссылка на продукт               | https://kudteam153-lab.github.io/endgrain/ — **имя устарело**, продукт называется Tanegi Bench (`#D-22`), и `endgrain.app` занят чужой работой конкурса | ⏳     |
-| Ссылка на репозиторий           | https://github.com/kudteam153-lab/endgrain (публичный) — переименование решает Антон, до отправки заявки                                                | ⏳     |
-| Видео или GIF                   | сценарий ниже, снять на дне 7                                                                                                                           | ⏳     |
-| Примеры досок                   | четыре ссылки с рецептом в хеше + PNG каждой                                                                                                            | ⏳     |
-| Как изготовить доску по проекту | листы 02 и 03 плюс абзац в описании                                                                                                                     | ⏳     |
+| Ссылка на продукт               | https://kudteam153-lab.github.io/tanegi-bench/ | ✅ |
+| Ссылка на репозиторий           | https://github.com/kudteam153-lab/tanegi-bench (публичный) | ✅ |
+| Видео или GIF                   | `submission/tanegi-demo.mp4` (263 КБ), `tanegi-demo.gif` (801 КБ), анимированный `tanegi-demo.svg` | ✅ |
+| Примеры досок                   | четыре ссылки с рецептом в хеше и PNG каждой — §4 | ✅ |
+| Как изготовить доску по проекту | абзац в тексте заявки §5, разворот — листы 02 и 03 | ✅ |
 
 ---
 
@@ -49,19 +49,68 @@
 
 ---
 
-## 4. Примеры досок для заявки
+## 4. Примеры досок
 
-Отобрать на дне 7 из галереи: четыре доски, разные по строю — крупная шахматка, диагональ, кирпич с переклейкой, доска с экзотикой. К каждой приложить ссылку (в ней рецепт целиком) и PNG.
+Четыре доски разного строя. Ссылка несёт рецепт целиком — открывается той же доской у любого.
 
-`<заполнить на дне 7>`
+### Крупная шахматка
+
+Дуб и клён, ламель 60 мм — самый спокойный строй, с него обычно начинают.
+
+[Открыть доску](https://kudteam153-lab.github.io/tanegi-bench/#d=eyJsYW1lbGxhVGhpY2tuZXNzTW0iOjYwLCJibGFua0xlbmd0aE1tIjoxMjAwLCJib2FyZExNbSI6NDAwLCJib2FyZEhNbSI6NDAsImtlcmZNbSI6My4yLCJ1bml0cyI6Im1tIiwic2VlZCI6MTAxLCJwYXR0ZXJuIjoiY2hlY2tlciIsImxhbWVsbGFzIjpbeyJzcGVjaWVzSWQiOiJvYWsiLCJ3aWR0aE1tIjo2MH0seyJzcGVjaWVzSWQiOiJtYXBsZSIsIndpZHRoTW0iOjYwfSx7InNwZWNpZXNJZCI6Im9hayIsIndpZHRoTW0iOjYwfSx7InNwZWNpZXNJZCI6Im1hcGxlIiwid2lkdGhNbSI6NjB9LHsic3BlY2llc0lkIjoib2FrIiwid2lkdGhNbSI6NjB9LHsic3BlY2llc0lkIjoibWFwbGUiLCJ3aWR0aE1tIjo2MH1dfQ) · снимок: `submission/ex1-shahmatka.png`
+
+### Диагональ
+
+Нарастающий сдвиг ряд за рядом. Четыре породы, орех держит контраст.
+
+[Открыть доску](https://kudteam153-lab.github.io/tanegi-bench/#d=eyJsYW1lbGxhVGhpY2tuZXNzTW0iOjQwLCJibGFua0xlbmd0aE1tIjoxMjAwLCJib2FyZExNbSI6NDAwLCJib2FyZEhNbSI6NDAsImtlcmZNbSI6My4yLCJ1bml0cyI6Im1tIiwic2VlZCI6MjAyLCJwYXR0ZXJuIjoiZGlhbW9uZCIsImxhbWVsbGFzIjpbeyJzcGVjaWVzSWQiOiJvYWsiLCJ3aWR0aE1tIjozNX0seyJzcGVjaWVzSWQiOiJtYXBsZSIsIndpZHRoTW0iOjM1fSx7InNwZWNpZXNJZCI6IndhbG51dCIsIndpZHRoTW0iOjM1fSx7InNwZWNpZXNJZCI6ImFzaCIsIndpZHRoTW0iOjM1fSx7InNwZWNpZXNJZCI6Im9hayIsIndpZHRoTW0iOjM1fSx7InNwZWNpZXNJZCI6Im1hcGxlIiwid2lkdGhNbSI6MzV9LHsic3BlY2llc0lkIjoid2FsbnV0Iiwid2lkdGhNbSI6MzV9LHsic3BlY2llc0lkIjoiYXNoIiwid2lkdGhNbSI6MzV9LHsic3BlY2llc0lkIjoib2FrIiwid2lkdGhNbSI6MzV9XX0) · снимок: `submission/ex2-diagonal.png`
+
+### Кирпич с переклейкой
+
+Панель режется вдоль, полосы разворачиваются и клеятся заново — рисунок становится двумерным.
+
+[Открыть доску](https://kudteam153-lab.github.io/tanegi-bench/#d=eyJsYW1lbGxhVGhpY2tuZXNzTW0iOjQwLCJibGFua0xlbmd0aE1tIjoxMjAwLCJib2FyZExNbSI6NDAwLCJib2FyZEhNbSI6NDAsImtlcmZNbSI6My4yLCJ1bml0cyI6Im1tIiwic2VlZCI6MzAzLCJwYXR0ZXJuIjoiYnJpY2siLCJsYW1lbGxhcyI6W3sic3BlY2llc0lkIjoid2FsbnV0Iiwid2lkdGhNbSI6MzB9LHsic3BlY2llc0lkIjoibWFwbGUiLCJ3aWR0aE1tIjozMH0seyJzcGVjaWVzSWQiOiJ3YWxudXQiLCJ3aWR0aE1tIjozMH0seyJzcGVjaWVzSWQiOiJtYXBsZSIsIndpZHRoTW0iOjMwfSx7InNwZWNpZXNJZCI6IndhbG51dCIsIndpZHRoTW0iOjMwfSx7InNwZWNpZXNJZCI6Im1hcGxlIiwid2lkdGhNbSI6MzB9LHsic3BlY2llc0lkIjoid2FsbnV0Iiwid2lkdGhNbSI6MzB9LHsic3BlY2llc0lkIjoibWFwbGUiLCJ3aWR0aE1tIjozMH1dLCJ3ZWF2ZXMiOlt7InN0cmlwV2lkdGhNbSI6MzAsImNvdW50Ijo3LCJraW5kIjoicm90YXRlIn1dfQ) · снимок: `submission/ex3-brick-weave.png`
+
+### Доска с экзотикой
+
+Падук, амарант и зебрано, переклейка «корзинка». Красиво и дорого — смета на листе 02 показывает это честно.
+
+[Открыть доску](https://kudteam153-lab.github.io/tanegi-bench/#d=eyJsYW1lbGxhVGhpY2tuZXNzTW0iOjQwLCJibGFua0xlbmd0aE1tIjoxMjAwLCJib2FyZExNbSI6NDAwLCJib2FyZEhNbSI6NDAsImtlcmZNbSI6My4yLCJ1bml0cyI6Im1tIiwic2VlZCI6NDA0LCJwYXR0ZXJuIjoiY2hlY2tlciIsImxhbWVsbGFzIjpbeyJzcGVjaWVzSWQiOiJtYXBsZSIsIndpZHRoTW0iOjMyfSx7InNwZWNpZXNJZCI6InBhZGF1ayIsIndpZHRoTW0iOjMyfSx7InNwZWNpZXNJZCI6Im1hcGxlIiwid2lkdGhNbSI6MzJ9LHsic3BlY2llc0lkIjoicHVycGxlaGVhcnQiLCJ3aWR0aE1tIjozMn0seyJzcGVjaWVzSWQiOiJtYXBsZSIsIndpZHRoTW0iOjMyfSx7InNwZWNpZXNJZCI6InplYnJhd29vZCIsIndpZHRoTW0iOjMyfSx7InNwZWNpZXNJZCI6Im1hcGxlIiwid2lkdGhNbSI6MzJ9LHsic3BlY2llc0lkIjoicGFkYXVrIiwid2lkdGhNbSI6MzJ9XSwid2VhdmVzIjpbeyJzdHJpcFdpZHRoTW0iOjMyLCJjb3VudCI6Niwia2luZCI6ImJhc2tldCJ9XX0) · снимок: `submission/ex4-exotic.png`
 
 ---
 
-## 5. Черновик описания «как изготовить доску по проекту»
+## 5. Текст заявки — готов к отправке
 
-По готовому проекту приложение выдаёт три листа. Лист 01 — чертёж с размерами и штампом: что за доска, из чего, в каком масштабе. Лист 02 — раскрой: сколько чего купить, в каком порядке резать и клеить, сколько уйдёт в опилки и во сколько обойдётся материал. Лист 03 — сборка по шагам: панель перед каждым резом с намеченными линиями, вид заготовки в длину, готовая доска.
+> Пост-комментарий со ссылкой, поэтому коротко. Видео прикладывается файлом:
+> `submission/tanegi-demo.mp4` (263 КБ) или `tanegi-demo.gif` (801 КБ).
+> Есть и анимированный SVG — `tanegi-demo.svg`, открывается в браузере,
+> но 1.9 МБ и на части площадок SVG режется, поэтому он запасной.
 
-Всё это выводится из одной модели: доска в приложении — это стек столярных операций, а не картинка. Поэтому раскрой не может разойтись с превью, а узор, который нельзя собрать на верстаке, невозможно нарисовать на экране.
+---
+
+**Tanegi Bench** — узор торцевой разделочной доски и план, по которому её можно изготовить.
+
+https://kudteam153-lab.github.io/tanegi-bench/
+
+Доска здесь не картинка, а стек столярных операций: склеить ламели, отрезать поперёк, переклеить, отрезать снова. Из этого стека выводится всё остальное — поэтому раскрой не расходится с превью, а узор, который не собрать на верстаке, нельзя и нарисовать: модель его не выражает.
+
+Толщина пропила 3.2 мм считается везде — в длине заготовки, в числе плашек, в смете. Поставьте ламель 8 мм, и приложение скажет: из заготовки 1200 мм выйдет 24 плашки вместо нужных 50, возьмите 2460 мм.
+
+Что внутри:
+— генератор узора по seed, двенадцать вариантов за раз, мутация и скрещивание отложенных;
+— лист «Раскрой»: заготовки к покупке, порядок работ, расход по породам, себестоимость;
+— доска в объёме из той же геометрии, что и чертёж, четыре вида;
+— PDF на три страницы;
+— ссылка несёт рецепт целиком: открыл у себя — увидел ту же доску.
+
+**Как изготовить доску по проекту.** Лист 01 — чертёж с размерами и штампом, над ним брусок с намеченным резом: видно, откуда берётся узор. Лист 02 — что купить, в каком порядке резать и клеить, сколько уйдёт в опилки, сколько стоит материал. Лист 03 — сборка по шагам: панель перед каждым резом с намеченными линиями, рядом карта заправки. Распечатал три листа — пошёл к верстаку.
+
+Имя из ремесла: 種木 «танэги» — блок из реек в хаконэ-ёсэги, который режут поперёк, чтобы узор проявился на торце. Это то же производство, что у торцевой доски, только на сто семьдесят лет старше.
+
+Репозиторий: https://github.com/kudteam153-lab/tanegi-bench
+Сделано за неделю Вайбатона, история коммитов публичная.
+
+---
 
 ---
 
