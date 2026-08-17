@@ -36,3 +36,27 @@ pnpm-debug.log*
 # идёт в заявку. Версия инструмента закреплена в package.json.
 # Восстановить: npx impeccable skills install -y --providers=claude --scope=project --no-hooks
 .claude/skills/impeccable/
+
+# --- Рабочая обвязка и процессные документы ----------------------------------
+# Сняты с учёта 16.08.2026 по решению Антона: в публичном репозитории должен
+# лежать продукт, а не то, чем его делали. На диске всё остаётся — протокол
+# сессий, хуки и гейты продолжают работать локально.
+#
+# ВНИМАНИЕ: снятие с учёта не убирает файлы из ИСТОРИИ. В коммитах до 16.08
+# они по-прежнему видны. Чтобы их не стало совсем, нужна перезапись истории и
+# force-push, а это обесценивает даты коммитов как доказательство сроков
+# работы (`#F-15`). Решение сознательное.
+.claude/
+playbook/
+AGENTS.md
+CLAUDE.md
+CHAT_HANDOFF.md
+NAVIGATION.md
+GOAL_GUIDE.md
+GOAL.md
+PLAN.md
+CORE_PRINCIPLES.md
+DECISIONS.md
+FACTS.md
+CHECKPOINT_CURRENT.md
+SUBMISSION.md
